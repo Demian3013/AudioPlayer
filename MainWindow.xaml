@@ -7,6 +7,30 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="3*"/>
+        </Grid.RowDefinitions>
+        <Grid
+            x:Name="TrackInfoGrid"
+            Row="0" Column="0" ColumnSpan="2">
+        </Grid>
+        <Grid
+            x:Name="TrackControlsGrid"
+            Row="0" Column="2">
+        </Grid>
+        <Grid
+            x:Name="FoldersAccessGrid"
+            Row="1" Column="0">
+        </Grid>
+        <Grid
+            x:Name="TrackListGrid"
+            Row="1" Column="1" ColumnSpan="2">
+        </Grid>
     </Grid>
 </Window>
