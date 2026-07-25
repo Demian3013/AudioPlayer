@@ -27,6 +27,9 @@
         <Grid
             x:Name="FoldersAccessGrid"
             Row="1" Column="0">
+            <TreeView
+                x:Name="FoldersTreeView">
+            </TreeView>
         </Grid>
         <Grid
             x:Name="TrackListGrid"
