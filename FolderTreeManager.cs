@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -7,13 +8,12 @@ namespace AudioPlayer;
 
 public static class FolderTreeManager
 {
-    private const string DriveImagePath = "Image/drive.png";
+    private const string DriveImagePath  = "Image/drive.png";
     private const string FolderImagePath = "Image/folder.png";
 
     public static void BuildTree(TreeView treeView)
     {
-        var drives = DriveInfo.GetDrives();
-        foreach (var drive in drives)
+        foreach (var drive in DriveInfo.GetDrives())
         {
             var name = $"{drive.Name} {drive.VolumeLabel}";
             var path = drive.RootDirectory.FullName;
@@ -21,20 +21,8 @@ public static class FolderTreeManager
             var driveItem = CreateTreeItem(name, path, DriveImagePath);
 
             treeView.Items.Add(driveItem);
-
-            try
-            {
-                foreach (string dir in Directory.GetDirectories(path))
-                {
-                    var folderItem = CreateTreeItem(
-                        Path.GetFileName(dir),
-                        dir,
-                        FolderImagePath
-                    );
-                    driveItem.Items.Add(folderItem);
-                }
-            }
-            catch { }
+            
+            LoadSubfolders(driveItem);
         }
     }
 
@@ -46,7 +34,7 @@ public static class FolderTreeManager
         {
             Source = new BitmapImage(new Uri(imagePath, UriKind.Relative)),
             Height = 14,
-            Width = 14,
+            Width  = 14,
             Margin = new Thickness(0, 0, 5, 0)
         });
 
@@ -64,14 +52,7 @@ public static class FolderTreeManager
 
     private static void OnTreeItemExpanded(object sender, RoutedEventArgs e)
     {
-        var item = sender as TreeViewItem;
-        if (item == null) return;
-
-        if (item.Items.Count == 0)
-        {
-            LoadSubfolders(item);
-            return;
-        }
+        if (sender is not TreeViewItem item) return;
 
         foreach (TreeViewItem child in item.Items)
         {
@@ -84,12 +65,11 @@ public static class FolderTreeManager
 
     private static void LoadSubfolders(TreeViewItem item)
     {
-        string path = item.Tag as string;
-        if (string.IsNullOrEmpty(path)) return;
+        if (item.Tag is not string path || string.IsNullOrEmpty(path)) return;
 
         try
         {
-            foreach (string dir in Directory.GetDirectories(path))
+            foreach (var dir in Directory.GetDirectories(path))
             {
                 var child = CreateTreeItem(
                     Path.GetFileName(dir),
@@ -99,10 +79,13 @@ public static class FolderTreeManager
                 item.Items.Add(child);
             }
         }
-        catch { }
+        catch (UnauthorizedAccessException e)
+        {
+            Debug.WriteLine("UnauthorizedAccessException: " + e.Message);
+        }
     }
 
-    public static void SubscribeToExpanded(TreeViewItem item)
+    private static void SubscribeToExpanded(TreeViewItem item)
     {
         item.Expanded += OnTreeItemExpanded;
     }
