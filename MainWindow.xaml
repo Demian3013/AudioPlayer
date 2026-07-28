@@ -28,12 +28,26 @@
             x:Name="FoldersAccessGrid"
             Row="1" Column="0">
             <TreeView
-                x:Name="FoldersTreeView">
+                x:Name="FoldersTreeView"
+                SelectedItemChanged="FoldersTreeView_OnSelectedItemChanged">
             </TreeView>
         </Grid>
         <Grid
             x:Name="TrackListGrid"
             Row="1" Column="1" ColumnSpan="2">
+            <DataGrid
+                x:Name="TrackDataGrid"
+                CanUserResizeColumns="True"
+                CanUserSortColumns="True"
+                CanUserAddRows="False"
+                CanUserDeleteRows="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Название" Binding="{Binding Name}"/>
+                    <DataGridTextColumn Header="Исполнитель"/>
+                    <DataGridTextColumn Header="Альбом"/>
+                    <DataGridTextColumn Header="Длительность"/>
+                </DataGrid.Columns>
+            </DataGrid>
         </Grid>
     </Grid>
 </Window>
