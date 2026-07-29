@@ -40,12 +40,14 @@
                 CanUserResizeColumns="True"
                 CanUserSortColumns="True"
                 CanUserAddRows="False"
-                CanUserDeleteRows="False">
+                CanUserDeleteRows="False"
+                AutoGenerateColumns="False"
+                ItemsSource="{Binding AudioFiles}">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Название" Binding="{Binding Name}"/>
-                    <DataGridTextColumn Header="Исполнитель"/>
-                    <DataGridTextColumn Header="Альбом"/>
-                    <DataGridTextColumn Header="Длительность"/>
+                    <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
+                    <DataGridTextColumn Header="Исполнитель" Binding="{Binding Artist}" Width="*"/>
+                    <DataGridTextColumn Header="Альбом" Binding="{Binding Album}" Width="*"/>
+                    <DataGridTextColumn Header="Длительность" Binding="{Binding Duration}" Width="Auto"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>
