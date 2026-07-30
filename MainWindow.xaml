@@ -40,6 +40,7 @@
                 CanUserResizeColumns="True"
                 CanUserSortColumns="True"
                 CanUserAddRows="False"
+                IsReadOnly="True"
                 CanUserDeleteRows="False"
                 AutoGenerateColumns="False"
                 ItemsSource="{Binding AudioFiles}">
@@ -51,5 +52,22 @@
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>
+        <GridSplitter
+            Grid.Column="0"
+            Grid.Row="1"
+            Width="5"
+            Background="Transparent"
+            ResizeBehavior="BasedOnAlignment"
+            ResizeDirection="Columns"/>
+        <GridSplitter
+            Grid.ColumnSpan="3"
+            Grid.Column="0"
+            Grid.Row="0"
+            Height="5"
+            Background="Transparent"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Bottom"
+            ResizeBehavior="BasedOnAlignment"
+            ResizeDirection="Rows"/>
     </Grid>
 </Window>
