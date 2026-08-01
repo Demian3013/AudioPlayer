@@ -8,14 +8,13 @@ using System.Windows.Controls;
 
 namespace AudioPlayer;
 
-
 public struct AudioFileInfo
 {
-    public string FilePath { get; set; }     
-    public string Name { get; set; }         
+    public string FilePath { get; set; }
+    public string Name { get; set; }
     public string Artist { get; set; }
     public string Album { get; set; }
-    public string Duration { get; set; }     
+    public string Duration { get; set; }
 }
 
 public partial class MainWindow
@@ -29,10 +28,10 @@ public partial class MainWindow
         AudioFiles = [];
         DataContext = this;
     }
-    
+
     private static readonly Regex SoundFileRegex = MyRegex();
-    
-    [GeneratedRegex(@"^.*\.(mp3|wav|wma|asf|avi)$", 
+
+    [GeneratedRegex(@"^.*\.(mp3|wav|wma|asf|avi)$",
         RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
     private static partial Regex MyRegex();
 
@@ -44,26 +43,20 @@ public partial class MainWindow
         if (item.Tag is not string path) return;
 
         Debug.WriteLine("Вы выбрали папку: " + path);
-        
+
         AudioFiles.Clear();
         IEnumerable<string> files = [];
-        
+
         try
         {
             files = Directory.EnumerateFiles(path)
                              .Where(file => SoundFileRegex.IsMatch(file));
         }
-        catch (Exception ex)
+        catch (UnauthorizedAccessException ex)
         {
-            MessageBox.Show($"Не удалось прочитать папку: {ex.Message}", "Ошибка",
-                MessageBoxButton.OK, MessageBoxImage.Error);
+            Debug.WriteLine("UnauthorizedAccessException: " + ex.Message);
         }
 
-        // using (var f = File.Create("12313"))
-        // {
-        //     f.Write([1]);
-        // }
-        
         foreach (var file in files)
         {
             try
@@ -92,12 +85,32 @@ public partial class MainWindow
                 AudioFiles.Add(new AudioFileInfo
                 {
                     FilePath = file,
-                    Name     = Path.GetFileNameWithoutExtension(file),
-                    Artist   = "Ошибка",
-                    Album    = "Ошибка",
+                    Name = Path.GetFileNameWithoutExtension(file),
+                    Artist = "Ошибка",
+                    Album = "Ошибка",
                     Duration = "00:00"
                 });
             }
         }
+    }
+
+    private void RewindButton_Click(object sender, RoutedEventArgs e)
+    {
+        
+    }
+
+    private void PlayPauseButton_Click(object sender, RoutedEventArgs e)
+    {
+     
+    }
+
+    private void ForwardButton_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    private void SpeedButton_Click(object sender, RoutedEventArgs e) 
+    { 
+
     }
 }

@@ -23,6 +23,91 @@
         <Grid
             x:Name="TrackControlsGrid"
             Row="0" Column="2">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <StackPanel 
+                Grid.Row="0"
+                Orientation="Horizontal"
+                HorizontalAlignment="Center">
+                <Button 
+                    x:Name="rewindButton" 
+                    Margin="2" 
+                    Click="RewindButton_Click"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <Image Source="/Image/rewind.png"
+                            Width="28" Height="28">
+                    </Image>
+                </Button>
+
+                <Button 
+                    Name="PlayPauseButton" 
+                    Margin="2" 
+                    Click="PlayPauseButton_Click"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <Image 
+                        Name="PlayPauseImage" 
+                        Source="/Image/play.png" 
+                        Width="28"
+                        Height="28" />
+                </Button>
+
+                <Button 
+                    Name="forwardButton"
+                    Margin="2"
+                    Click="ForwardButton_Click"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <Image 
+                        Source="/Image/forward.png"
+                        Width="28" Height="28" />
+                </Button>
+            </StackPanel>
+            <Slider
+                Grid.Row="1"
+                Name="ProgressSlider"
+                Style="{StaticResource CustomSliderStyle}"
+                Minimum="0"
+                Maximum="100"
+                Value="0"
+                Margin="10,5,10,5"
+                VerticalAlignment="Center" />
+            <Grid Grid.Row="2" Margin="10,5,10,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <StackPanel 
+                    Grid.Column="0" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Left" 
+                    VerticalAlignment="Center">
+                    <Image 
+                        Source="/Image/volume.png" 
+                        Width="20" Height="20" 
+                        Margin="0,0,5,0"/>
+                    <Slider 
+                        x:Name="VolumeSlider" 
+                        Style="{StaticResource VolumeSliderStyle}"
+                        Minimum="0" Maximum="1" 
+                        Value="0.5" 
+                        Width="100" 
+                        VerticalAlignment="Center"/>
+                </StackPanel>
+                <StackPanel 
+                    Grid.Column="1" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right" 
+                    VerticalAlignment="Center">
+                    <Button Style="{StaticResource SpeedButtonStyle}" Content="0.5" Margin="3,0" Click="SpeedButton_Click"/>
+                    <Button Style="{StaticResource SpeedButtonStyle}" Content="1" Margin="3,0" Click="SpeedButton_Click"/>
+                    <Button Style="{StaticResource SpeedButtonStyle}" Content="2" Margin="3,0" Click="SpeedButton_Click"/>
+                </StackPanel>
+            </Grid>
         </Grid>
         <Grid
             x:Name="FoldersAccessGrid"
