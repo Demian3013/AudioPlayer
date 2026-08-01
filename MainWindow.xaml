@@ -44,20 +44,20 @@
                 </Button>
 
                 <Button 
-                    Name="PlayPauseButton" 
+                    x:Name="PlayPauseButton" 
                     Margin="2" 
                     Click="PlayPauseButton_Click"
                     Background="Transparent"
                     BorderThickness="0">
                     <Image 
-                        Name="PlayPauseImage" 
+                        x:Name="PlayPauseImage" 
                         Source="/Image/play.png" 
                         Width="28"
                         Height="28" />
                 </Button>
 
                 <Button 
-                    Name="forwardButton"
+                    x:Name="forwardButton"
                     Margin="2"
                     Click="ForwardButton_Click"
                     Background="Transparent"
@@ -69,7 +69,7 @@
             </StackPanel>
             <Slider
                 Grid.Row="1"
-                Name="ProgressSlider"
+                x:Name="ProgressSlider"
                 Style="{StaticResource CustomSliderStyle}"
                 Minimum="0"
                 Maximum="100"
