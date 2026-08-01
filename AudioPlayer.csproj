@@ -38,6 +38,8 @@
     <Resource Include="Image\volume.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <None Remove="Image\track_placeholder.png" />
+    <Resource Include="Image\track_placeholder.png" />
   </ItemGroup>
 
 </Project>

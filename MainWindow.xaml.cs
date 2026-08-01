@@ -5,6 +5,9 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using TagLib;
 
 namespace AudioPlayer;
 
@@ -30,6 +33,7 @@ public partial class MainWindow
     }
 
     private static readonly Regex SoundFileRegex = MyRegex();
+    private static readonly string TrackPlaceholderPath = "Image/track_placeholder.png";
 
     [GeneratedRegex(@"^.*\.(mp3|wav|wma|asf|avi)$",
         RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
@@ -79,15 +83,15 @@ public partial class MainWindow
                 };
                 AudioFiles.Add(info);
             }
-            catch (Exception ex)
+            catch (UnauthorizedAccessException ex)
             {
                 Debug.WriteLine($"Ошибка чтения {file}: {ex.Message}");
                 AudioFiles.Add(new AudioFileInfo
                 {
                     FilePath = file,
-                    Name = Path.GetFileNameWithoutExtension(file),
-                    Artist = "Ошибка",
-                    Album = "Ошибка",
+                    Name     = Path.GetFileNameWithoutExtension(file),
+                    Artist   = "Ошибка",
+                    Album    = "Ошибка",
                     Duration = "00:00"
                 });
             }
@@ -112,5 +116,42 @@ public partial class MainWindow
     private void SpeedButton_Click(object sender, RoutedEventArgs e) 
     { 
 
+    }
+
+    private void TrackDataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (TrackDataGrid.SelectedItem is not AudioFileInfo selectedTrackInfo) return;
+        
+        using var tagFile = TagLib.File.Create(selectedTrackInfo.FilePath);
+
+        if (tagFile.Tag.Pictures.Length != 0)
+        {
+            var picture = tagFile.Tag.Pictures[0];
+            var bitmapImageFromPicture = GetBitmapImageFromPicture(picture);
+            if (bitmapImageFromPicture != null)
+            {
+                TrackImage.Source = bitmapImageFromPicture;
+            }
+        }
+        else
+        {
+            TrackImage.Source = new BitmapImage(new Uri(TrackPlaceholderPath, UriKind.Relative));
+        }
+        
+        
+    }
+
+    private static BitmapImage? GetBitmapImageFromPicture(IPicture p)
+    {
+        if (p.Data.IsEmpty) return null;
+        
+        using var stream = new MemoryStream(p.Data.Data);
+        var bmp = new BitmapImage();
+        bmp.BeginInit();
+        bmp.CacheOption = BitmapCacheOption.OnLoad;
+        bmp.StreamSource = stream;
+        bmp.EndInit();
+        
+        return bmp;
     }
 }

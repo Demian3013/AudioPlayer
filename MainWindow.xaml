@@ -19,6 +19,14 @@
         <Grid
             x:Name="TrackInfoGrid"
             Row="0" Column="0" ColumnSpan="2">
+            <StackPanel
+                x:Name="TrackInfoStackPanel"
+                Orientation="Horizontal">
+                <Image 
+                    x:Name="TrackImage"
+                    Source="Image/track_placeholder.png"
+                    Height="100"/>                
+            </StackPanel>
         </Grid>
         <Grid
             x:Name="TrackControlsGrid"
@@ -33,7 +41,7 @@
                 Orientation="Horizontal"
                 HorizontalAlignment="Center">
                 <Button 
-                    x:Name="rewindButton" 
+                    x:Name="RewindButton" 
                     Margin="2" 
                     Click="RewindButton_Click"
                     Background="Transparent"
@@ -57,7 +65,7 @@
                 </Button>
 
                 <Button 
-                    x:Name="forwardButton"
+                    x:Name="ForwardButton"
                     Margin="2"
                     Click="ForwardButton_Click"
                     Background="Transparent"
@@ -128,6 +136,9 @@
                 IsReadOnly="True"
                 CanUserDeleteRows="False"
                 AutoGenerateColumns="False"
+                SelectionMode="Single"
+                SelectionUnit="FullRow"
+                SelectionChanged="TrackDataGrid_OnSelectionChanged"
                 ItemsSource="{Binding AudioFiles}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
