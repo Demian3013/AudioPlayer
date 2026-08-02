@@ -19,13 +19,76 @@
         <Grid
             x:Name="TrackInfoGrid"
             Row="0" Column="0" ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <Image 
+                x:Name="TrackImage"
+                Source="Image/track_placeholder.png"
+                Height="100"
+                Margin="10,7,0,0"/>
             <StackPanel
-                x:Name="TrackInfoStackPanel"
+                Grid.Column="1"
+                Grid.ColumnSpan="2"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
                 Orientation="Horizontal">
-                <Image 
-                    x:Name="TrackImage"
-                    Source="Image/track_placeholder.png"
-                    Height="100"/>                
+                <Label
+                    Content="Название:"
+                    VerticalAlignment="Center"
+                    Foreground="#FF838383"/>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    x:Name="TrackNameTextBlock"/>
+            </StackPanel>
+            <StackPanel
+                Grid.Column="1"
+                Margin= "0,25,0,0">
+                <StackPanel 
+                     Orientation="Horizontal">
+                    <Label
+                    Content="Автор:"
+                    VerticalAlignment="Center"
+                    Foreground="#FF838383"/>
+                    <TextBlock
+                    VerticalAlignment="Center"
+                    x:Name="TrackArtictTextBlock"/>
+                </StackPanel>
+                <StackPanel
+                    Orientation="Horizontal">
+                    <Label
+                        Content="Год выхода:"
+                        VerticalAlignment="Center"
+                        Foreground="#FF838383"/>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        x:Name="TrackYearTextBlock"/>
+                </StackPanel>
+                <StackPanel
+                    Orientation="Horizontal">
+                    <Label
+                        Content="Жанр"
+                        VerticalAlignment="Center"
+                        Foreground="#FF838383"/>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        x:Name="TrackGenreTextBlock"/>
+                </StackPanel>
+            </StackPanel>
+            <StackPanel
+                Grid.Column="2"
+                Margin= "0,25,0,0">
+                <Label
+                    Content="Описание:"
+                    VerticalAlignment="Center"
+                    Foreground="#FF838383"/>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    x:Name="TrackDestributionTextBlock"
+                    TextWrapping="Wrap"/>
             </StackPanel>
         </Grid>
         <Grid
@@ -42,7 +105,7 @@
                 HorizontalAlignment="Center">
                 <Button 
                     x:Name="RewindButton" 
-                    Margin="2" 
+                    Margin="0,0,15,0" 
                     Click="RewindButton_Click"
                     Background="Transparent"
                     BorderThickness="0">
@@ -66,7 +129,7 @@
 
                 <Button 
                     x:Name="ForwardButton"
-                    Margin="2"
+                    Margin="15,0,0,0"
                     Click="ForwardButton_Click"
                     Background="Transparent"
                     BorderThickness="0">

@@ -138,7 +138,23 @@ public partial class MainWindow
             TrackImage.Source = new BitmapImage(new Uri(TrackPlaceholderPath, UriKind.Relative));
         }
         
-        
+        TrackNameTextBlock.Text = selectedTrackInfo.Name;
+
+        TrackArtictTextBlock.Text = string.IsNullOrEmpty(tagFile.Tag.FirstPerformer)
+           ? "Неизвестен"
+           : tagFile.Tag.FirstPerformer;
+
+        TrackYearTextBlock.Text = tagFile.Tag.Year > 0
+            ? tagFile.Tag.Year.ToString()
+            : "Неизвестно";
+
+        TrackGenreTextBlock.Text = tagFile.Tag.Genres.Length > 0
+            ? string.Join(", ", tagFile.Tag.Genres)
+            : "Неизвестен";
+
+        TrackDestributionTextBlock.Text = string.IsNullOrEmpty(tagFile.Tag.Comment)
+           ? "Нет описания"
+           : tagFile.Tag.Comment;
     }
 
     private static BitmapImage? GetBitmapImageFromPicture(IPicture p)
