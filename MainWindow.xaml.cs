@@ -11,15 +11,6 @@ using TagLib;
 
 namespace AudioPlayer;
 
-public struct AudioFileInfo
-{
-    public string FilePath { get; set; }
-    public string Name { get; set; }
-    public string Artist { get; set; }
-    public string Album { get; set; }
-    public string Duration { get; set; }
-}
-
 public partial class MainWindow
 {
     public MainWindow()
@@ -27,8 +18,7 @@ public partial class MainWindow
         InitializeComponent();
 
         FolderTreeManager.BuildTree(FoldersTreeView);
-
-        AudioFiles = [];
+        
         DataContext = this;
     }
 
@@ -39,8 +29,10 @@ public partial class MainWindow
         RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
     private static partial Regex MyRegex();
 
-    public ObservableCollection<AudioFileInfo> AudioFiles { get; set; }
+    public ObservableCollection<AudioFileInfo> AudioFiles { get; set; } = [];
 
+    private MediaPlayer Player { get; set; } = new();
+    
     private void FoldersTreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         if (FoldersTreeView.SelectedItem is not TreeViewItem item) return;
@@ -105,12 +97,26 @@ public partial class MainWindow
 
     private void PlayPauseButton_Click(object sender, RoutedEventArgs e)
     {
-     
+        if (!Player.HasAudio)
+        {
+            MessageBox.Show("Не выбран трек или выбран медиафайл без аудио!", "Ошибка!", MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+
+        // в начале трека, то есть не начали ещё проигрывание
+        if (Player.Position == TimeSpan.Zero)
+        {
+            Player.Play();
+        }
+        else
+        {
+            Player.Pause();
+        }
     }
 
     private void ForwardButton_Click(object sender, RoutedEventArgs e)
     {
-
+        
     }
 
     private void SpeedButton_Click(object sender, RoutedEventArgs e) 
@@ -124,37 +130,48 @@ public partial class MainWindow
         
         using var tagFile = TagLib.File.Create(selectedTrackInfo.FilePath);
 
-        if (tagFile.Tag.Pictures.Length != 0)
-        {
-            var picture = tagFile.Tag.Pictures[0];
-            var bitmapImageFromPicture = GetBitmapImageFromPicture(picture);
-            if (bitmapImageFromPicture != null)
+        #region TackInfoExtraction
+
+            if (tagFile.Tag.Pictures.Length != 0)
             {
-                TrackImage.Source = bitmapImageFromPicture;
+                var picture = tagFile.Tag.Pictures[0];
+                var bitmapImageFromPicture = GetBitmapImageFromPicture(picture);
+                if (bitmapImageFromPicture != null)
+                {
+                    TrackImage.Source = bitmapImageFromPicture;
+                }
             }
-        }
-        else
-        {
-            TrackImage.Source = new BitmapImage(new Uri(TrackPlaceholderPath, UriKind.Relative));
-        }
+            else
+            {
+                TrackImage.Source = new BitmapImage(new Uri(TrackPlaceholderPath, UriKind.Relative));
+            }
+            
+            TrackNameTextBlock.Text = selectedTrackInfo.Name;
+
+            TrackArtistTextBlock.Text = string.IsNullOrEmpty(tagFile.Tag.FirstPerformer)
+                ? "Неизвестен"
+                : tagFile.Tag.FirstPerformer;
+
+            TrackYearTextBlock.Text = tagFile.Tag.Year > 0
+                ? tagFile.Tag.Year.ToString()
+                : "Неизвестно";
+
+            TrackGenreTextBlock.Text = tagFile.Tag.Genres.Length > 0
+                ? string.Join(", ", tagFile.Tag.Genres)
+                : "Неизвестен";
+
+            TrackDistributionTextBlock.Text = string.IsNullOrEmpty(tagFile.Tag.Comment)
+                ? "Нет описания"
+                : tagFile.Tag.Comment;
+
+        #endregion
+
+        var selectedTackUri = new Uri(selectedTrackInfo.FilePath, UriKind.Absolute);
         
-        TrackNameTextBlock.Text = selectedTrackInfo.Name;
-
-        TrackArtictTextBlock.Text = string.IsNullOrEmpty(tagFile.Tag.FirstPerformer)
-           ? "Неизвестен"
-           : tagFile.Tag.FirstPerformer;
-
-        TrackYearTextBlock.Text = tagFile.Tag.Year > 0
-            ? tagFile.Tag.Year.ToString()
-            : "Неизвестно";
-
-        TrackGenreTextBlock.Text = tagFile.Tag.Genres.Length > 0
-            ? string.Join(", ", tagFile.Tag.Genres)
-            : "Неизвестен";
-
-        TrackDestributionTextBlock.Text = string.IsNullOrEmpty(tagFile.Tag.Comment)
-           ? "Нет описания"
-           : tagFile.Tag.Comment;
+        Player.Pause();
+        ProgressSlider.Value = 0;
+        Player.Close();
+        Player.Open(selectedTackUri);
     }
 
     private static BitmapImage? GetBitmapImageFromPicture(IPicture p)
