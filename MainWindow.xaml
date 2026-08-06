@@ -10,7 +10,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
             <ColumnDefinition/>
-            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="1.5*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition/>
@@ -148,6 +148,9 @@
                 Minimum="0"
                 Maximum="1"
                 Value="0"
+                ValueChanged="ProgressSlider_ValueChanged"
+                SmallChange="0.01"
+                LargeChange="0.02"
                 Margin="10,5,10,5"
                 VerticalAlignment="Center"
                 Cursor="Hand"/>
@@ -173,14 +176,15 @@
                         Value="0.5"
                         Width="100"
                         VerticalAlignment="Center"
-                        Cursor="Hand"/>
+                        Cursor="Hand"
+                        ValueChanged="VolumeSlider_ValueChanged"/>
                 </StackPanel>
                 <StackPanel 
                     Grid.Column="1" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Right" 
                     VerticalAlignment="Center">
-                    <Button Style="{StaticResource SpeedButtonStyle}" Cursor="Hand" Content="0.5" Margin="3,0" Click="SpeedButton_Click"/>
+                    <Button Style="{StaticResource SpeedButtonStyle}" Cursor="Hand" Content="0,5" Margin="3,0" Click="SpeedButton_Click"/>
                     <Button Style="{StaticResource SpeedButtonStyle}" Cursor="Hand" Content="1" Margin="3,0" Click="SpeedButton_Click"/>
                     <Button Style="{StaticResource SpeedButtonStyle}" Cursor="Hand" Content="2" Margin="3,0" Click="SpeedButton_Click"/>
                 </StackPanel>
