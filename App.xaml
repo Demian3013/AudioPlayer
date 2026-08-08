@@ -4,7 +4,92 @@
              xmlns:local="clr-namespace:AudioPlayer"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <Style x:Key="CustomSliderStyle" TargetType="Slider">
+
+        <LinearGradientBrush x:Key="MainBg" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#1A1A2E" Offset="0"/>
+            <GradientStop Color="#16213E" Offset="0.5"/>
+            <GradientStop Color="#0F3460" Offset="1"/>
+        </LinearGradientBrush>
+
+        <SolidColorBrush x:Key="AccentBlue" Color="#1A73E8"/>
+
+        <SolidColorBrush x:Key="GlassBg" Color="#30FFFFFF"/>
+        <SolidColorBrush x:Key="GlassBorder" Color="#50FFFFFF"/>
+
+        <SolidColorBrush x:Key="PrimaryText" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="SecondaryText" Color="#B0C4DE"/>
+
+        <SolidColorBrush x:Key="SliderTrackBackground" Color="#40FFFFFF"/>
+
+        <Style x:Key="GlassPanelStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource GlassBg}"/>
+            <Setter Property="CornerRadius" Value="15"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" Opacity="0.3" BlurRadius="10" ShadowDepth="3"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
+        </Style>
+        
+        <Style TargetType="Label">
+            <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
+        </Style>
+
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
+            <Setter Property="RowBackground" Value="#20FFFFFF"/>
+            <Setter Property="AlternatingRowBackground" Value="#10FFFFFF"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#30FFFFFF"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryText}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Height" Value="30"/>
+        </Style>
+
+        <Style TargetType="TreeView">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style TargetType="TreeViewItem">
+            <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SliderStyle" TargetType="Slider">
             <Setter Property="Height" Value="20"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -23,7 +108,7 @@
                                                 <Setter Property="Template">
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="RepeatButton">
-                                                            <Border Background="Black" CornerRadius="3" Height="8" Margin="2,1,2,1"/>
+                                                            <Border Background="{StaticResource SecondaryText}" CornerRadius="3" Height="8" Margin="2,1,2,1"/>
                                                         </ControlTemplate>
                                                     </Setter.Value>
                                                 </Setter>
@@ -38,7 +123,7 @@
                                                 <Setter Property="Template">
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="RepeatButton">
-                                                            <Border Background="#E0E0E0" CornerRadius="3" Height="8" Margin="2,1,2,1"/>
+                                                            <Border Background="{StaticResource SliderTrackBackground}" CornerRadius="3" Height="8" Margin="2,1,2,1"/>
                                                         </ControlTemplate>
                                                     </Setter.Value>
                                                 </Setter>
@@ -53,7 +138,10 @@
                                                 <Setter Property="Template">
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="Thumb">
-                                                            <Ellipse Fill="White" Stroke="Black" StrokeThickness="2" Width="16" Height="16"/>
+                                                            <Grid>
+                                                                <Ellipse Fill="White" Stroke="{StaticResource SecondaryText}" StrokeThickness="2" Width="16" Height="16"/>
+                                                                <Ellipse Fill="Black" Width="18" Height="18" Opacity="0.2" Margin="1,1,0,0"/>
+                                                            </Grid>
                                                         </ControlTemplate>
                                                     </Setter.Value>
                                                 </Setter>
@@ -71,20 +159,21 @@
         <Style x:Key="SpeedButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="24"/>
             <Setter Property="Height" Value="24"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BorderBrush" Value="Black"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
             <Setter Property="BorderThickness" Value="1.5"/>
-            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="12"
-                        SnapsToDevicePixels="True">
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12"
+                                SnapsToDevicePixels="True">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
@@ -92,78 +181,14 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="White"/>
-                    <Setter Property="BorderBrush" Value="Black"/>
+                    <Setter Property="Background" Value="#40FFFFFF"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentBlue}"/>
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="White"/>
-                    <Setter Property="BorderBrush" Value="Black"/>
+                    <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
+                    <Setter Property="Foreground" Value="White"/>
                 </Trigger>
             </Style.Triggers>
-        </Style>
-
-        <Style x:Key="VolumeSliderStyle" TargetType="Slider">
-            <Setter Property="Height" Value="20"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Slider">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto" MinHeight="10"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Track x:Name="PART_Track" Grid.Row="1" VerticalAlignment="Center">
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="Slider.DecreaseLarge">
-                                        <RepeatButton.Style>
-                                            <Style TargetType="RepeatButton">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="RepeatButton">
-                                                            <Border Background="#D0D0D0" CornerRadius="3" Height="8" Margin="2,1,2,1"/>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </RepeatButton.Style>
-                                    </RepeatButton>
-                                </Track.DecreaseRepeatButton>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="Slider.IncreaseLarge">
-                                        <RepeatButton.Style>
-                                            <Style TargetType="RepeatButton">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="RepeatButton">
-                                                            <Border Background="#D0D0D0" CornerRadius="3" Height="8" Margin="2,1,2,1"/>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </RepeatButton.Style>
-                                    </RepeatButton>
-                                </Track.IncreaseRepeatButton>
-                                <Track.Thumb>
-                                    <Thumb>
-                                        <Thumb.Style>
-                                            <Style TargetType="Thumb">
-                                                <Setter Property="Template">
-                                                    <Setter.Value>
-                                                        <ControlTemplate TargetType="Thumb">
-                                                            <Ellipse Fill="White" Stroke="Black" StrokeThickness="2" Width="16" Height="16"/>
-                                                        </ControlTemplate>
-                                                    </Setter.Value>
-                                                </Setter>
-                                            </Style>
-                                        </Thumb.Style>
-                                    </Thumb>
-                                </Track.Thumb>
-                            </Track>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
     </Application.Resources>
 </Application>

@@ -5,239 +5,251 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:AudioPlayer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="600" Width="1000"
+        Background="{StaticResource MainBg}">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="1.5*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition/>
-            <RowDefinition Height="3*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid
-            x:Name="TrackInfoGrid"
-            Row="0" Column="0" ColumnSpan="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-
-            <Image 
-                x:Name="TrackImage"
-                Source="Image/track_placeholder.png"
-                Height="100"
-                Margin="10"/>
-            <StackPanel
-                Grid.Column="1"
-                Grid.ColumnSpan="2"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Orientation="Horizontal">
-                <Label
-                    Content="Название:"
-                    VerticalAlignment="Center"
-                    Foreground="#FF838383"/>
-                <TextBlock
-                    VerticalAlignment="Center"
-                    x:Name="TrackNameTextBlock"/>
-            </StackPanel>
-            <StackPanel
-                Grid.Column="1"
-                Margin= "0,25,0,0">
-                <StackPanel 
-                     Orientation="Horizontal">
-                    <Label
-                    Content="Автор:"
-                    VerticalAlignment="Center"
-                    Foreground="#FF838383"/>
-                    <TextBlock
-                    VerticalAlignment="Center"
-                    x:Name="TrackArtistTextBlock"/>
-                </StackPanel>
-                <StackPanel
-                    Orientation="Horizontal">
-                    <Label
-                        Content="Год выхода:"
-                        VerticalAlignment="Center"
-                        Foreground="#FF838383"/>
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        x:Name="TrackYearTextBlock"/>
-                </StackPanel>
-                <StackPanel
-                    Orientation="Horizontal">
-                    <Label
-                        Content="Жанр"
-                        VerticalAlignment="Center"
-                        Foreground="#FF838383"/>
-                    <TextBlock
-                        VerticalAlignment="Center"
-                        x:Name="TrackGenreTextBlock"/>
-                </StackPanel>
-            </StackPanel>
-            <StackPanel
-                Grid.Column="2"
-                Margin= "0,25,0,0">
-                <Label
-                    Content="Описание:"
-                    VerticalAlignment="Center"
-                    Foreground="#FF838383"/>
-                <TextBlock
-                    VerticalAlignment="Center"
-                    x:Name="TrackDistributionTextBlock"
-                    TextWrapping="Wrap"/>
-            </StackPanel>
-        </Grid>
-        <Grid
-            x:Name="TrackControlsGrid"
-            Row="0" Column="2">
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
-            <StackPanel 
-                Grid.Row="0"
-                Orientation="Horizontal"
-                HorizontalAlignment="Center">
-                <Button 
-                    x:Name="RewindButton" 
-                    Margin="0,0,15,0" 
-                    Click="RewindButton_Click"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Cursor="Hand">
-                    <Image Source="/Image/rewind.png"
-                            Width="28" Height="28">
-                    </Image>
-                </Button>
-
-                <Button 
-                    x:Name="PlayPauseButton" 
-                    Margin="2" 
-                    Click="PlayPauseButton_Click"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Cursor="Hand">
-                    <Image 
-                        x:Name="PlayPauseImage" 
-                        Source="/Image/play.png" 
-                        Width="28"
-                        Height="28"/>
-                </Button>
-
-                <Button 
-                    x:Name="ForwardButton"
-                    Margin="15,0,0,0"
-                    Click="ForwardButton_Click"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Cursor="Hand">
-                    <Image 
-                        Source="/Image/forward.png"
-                        Width="28" Height="28" />
-                </Button>
-            </StackPanel>
-            <Slider
-                Grid.Row="1"
-                x:Name="ProgressSlider"
-                Style="{StaticResource CustomSliderStyle}"
-                Minimum="0"
-                Maximum="1"
-                Value="0"
-                SmallChange="0.01"
-                LargeChange="0.02"
-                Margin="10,5,10,5"
-                VerticalAlignment="Center"
-                Cursor="Hand"
-                PreviewMouseDown="ProgressSlider_PreviewMouseDown"/>
-            <Grid Grid.Row="2" Margin="10,5,10,5">
+        
+        <Border 
+            Grid.Row="0" 
+            Grid.Column="0" 
+            Grid.ColumnSpan="2"
+            Style="{StaticResource GlassPanelStyle}">
+            <Grid x:Name="TrackInfoGrid">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
+
+                <Image x:Name="TrackImage"
+                       Source="Image/track_placeholder.png"
+                       Height="100" Width="100"
+                       Margin="10"
+                       Stretch="UniformToFill"/>
                 <StackPanel 
-                    Grid.Column="0" 
-                    Orientation="Horizontal" 
+                    Grid.Column="1" 
                     HorizontalAlignment="Left" 
-                    VerticalAlignment="Center">
-                    <Image 
-                        Source="/Image/volume.png" 
-                        Width="20" Height="20" 
-                        Margin="0,0,5,0"
-                        Cursor="Hand"/>
-                    <Slider 
-                        x:Name="VolumeSlider" 
-                        Style="{StaticResource VolumeSliderStyle}"
-                        Minimum="0" Maximum="1"
-                        Value="0.5"
-                        Width="100"
-                        VerticalAlignment="Center"
-                        Cursor="Hand"
-                        ValueChanged="VolumeSlider_ValueChanged"/>
+                    VerticalAlignment="Top" 
+                    Orientation="Horizontal">
+                    <Label 
+                        Content="Название:" 
+                        VerticalAlignment="Center" 
+                        Foreground="{StaticResource SecondaryText}"/>
+                    <TextBlock 
+                        x:Name="TrackNameTextBlock" 
+                        VerticalAlignment="Center"/>
                 </StackPanel>
                 <StackPanel 
                     Grid.Column="1" 
-                    Orientation="Horizontal" 
-                    HorizontalAlignment="Right" 
-                    VerticalAlignment="Center">
-                    <Button Style="{StaticResource SpeedButtonStyle}" Cursor="Hand" Content="0,5" Margin="3,0" Click="SpeedButton_Click"/>
-                    <Button Style="{StaticResource SpeedButtonStyle}" Cursor="Hand" Content="1" Margin="3,0" Click="SpeedButton_Click"/>
-                    <Button Style="{StaticResource SpeedButtonStyle}" Cursor="Hand" Content="2" Margin="3,0" Click="SpeedButton_Click"/>
+                    Margin="0,25,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <Label 
+                            Content="Автор:" 
+                            VerticalAlignment="Center" 
+                            Foreground="{StaticResource SecondaryText}"/>
+                        <TextBlock 
+                            x:Name="TrackArtistTextBlock" 
+                            VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label 
+                            Content="Год выхода:" 
+                            VerticalAlignment="Center" 
+                            Foreground="{StaticResource SecondaryText}"/>
+                        <TextBlock 
+                            x:Name="TrackYearTextBlock" 
+                            VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label 
+                            Content="Жанр:"
+                            VerticalAlignment="Center" 
+                            Foreground="{StaticResource SecondaryText}"/>
+                        <TextBlock 
+                            x:Name="TrackGenreTextBlock" 
+                            VerticalAlignment="Center"/>
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel 
+                    Grid.Column="2"
+                    Margin="5,25,5,0">
+                    <Label 
+                        Content="Описание:"
+                        VerticalAlignment="Center" 
+                        Foreground="{StaticResource SecondaryText}"/>
+                    <TextBlock 
+                        x:Name="TrackDistributionTextBlock" 
+                        TextWrapping="Wrap"/>
                 </StackPanel>
             </Grid>
-        </Grid>
-        <Grid
-            x:Name="FoldersAccessGrid"
-            Row="1" Column="0">
-            <TreeView
-                x:Name="FoldersTreeView"
-                SelectedItemChanged="FoldersTreeView_OnSelectedItemChanged">
-            </TreeView>
-        </Grid>
-        <Grid
-            x:Name="TrackListGrid"
-            Row="1" Column="1" ColumnSpan="2">
-            <DataGrid
-                x:Name="TrackDataGrid"
-                CanUserResizeColumns="True"
-                CanUserSortColumns="True"
-                CanUserAddRows="False"
-                IsReadOnly="True"
-                CanUserDeleteRows="False"
-                AutoGenerateColumns="False"
-                SelectionMode="Single"
-                SelectionUnit="FullRow"
-                SelectionChanged="TrackDataGrid_OnSelectionChanged"
-                ItemsSource="{Binding AudioFiles}"
-                Cursor="Hand">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
-                    <DataGridTextColumn Header="Исполнитель" Binding="{Binding Artist}" Width="*"/>
-                    <DataGridTextColumn Header="Альбом" Binding="{Binding Album}" Width="*"/>
-                    <DataGridTextColumn Header="Длительность" Binding="{Binding Duration}" Width="Auto"/>
-                </DataGrid.Columns>
-            </DataGrid>
-        </Grid>
-        <GridSplitter
-            Grid.Column="0"
+        </Border>
+
+        <Border 
+            Grid.Row="0" 
+            Grid.Column="2" 
+            Style="{StaticResource GlassPanelStyle}">
+            <Grid x:Name="TrackControlsGrid">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel 
+                    Grid.Row="0" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,5,0,0">
+                    <Button 
+                        x:Name="RewindButton" 
+                        Margin="0,0,15,0" 
+                        Click="RewindButton_Click"
+                        Background="Transparent" 
+                        BorderThickness="0"
+                        Cursor="Hand">
+                        <Image 
+                            Source="/Image/rewind.png" 
+                            Width="28" Height="28"/>
+                    </Button>
+                    
+                    <Button 
+                        x:Name="PlayPauseButton" 
+                        Margin="2" 
+                        Click="PlayPauseButton_Click"
+                        Background="Transparent" 
+                        BorderThickness="0" 
+                        Cursor="Hand">
+                        <Image 
+                            x:Name="PlayPauseImage" 
+                            Source="/Image/play.png" 
+                            Width="28" Height="28"/>
+                    </Button>
+                    
+                    <Button 
+                        x:Name="ForwardButton"
+                        Margin="15,0,0,0" 
+                        Click="ForwardButton_Click"
+                        Background="Transparent" 
+                        BorderThickness="0"
+                        Cursor="Hand">
+                        <Image 
+                            Source="/Image/forward.png"
+                            Width="28" Height="28"/>
+                    </Button>
+                </StackPanel>
+
+                <Slider x:Name="ProgressSlider" 
+                        Grid.Row="1"
+                        Style="{StaticResource SliderStyle}"
+                        Minimum="0" 
+                        Maximum="1" 
+                        Value="0"
+                        SmallChange="0.01" 
+                        Margin="10,5,10,5"
+                        VerticalAlignment="Center"
+                        PreviewMouseDown="ProgressSlider_PreviewMouseDown"
+                        Cursor="Hand"/>
+
+                <Grid Grid.Row="2"
+                      Margin="10,5,10,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel 
+                        Grid.Column="0"
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Left" 
+                        VerticalAlignment="Center">
+                        <Image 
+                            Source="/Image/volume.png"
+                            Width="20" 
+                            Height="20"
+                            Margin="0,0,5,0" 
+                            Cursor="Hand"/>
+                        <Slider x:Name="VolumeSlider"
+                                Style="{StaticResource SliderStyle}"
+                                Minimum="0" 
+                                Maximum="1" 
+                                Value="0.5"
+                                Width="100" 
+                                VerticalAlignment="Center"
+                                ValueChanged="VolumeSlider_ValueChanged"
+                                Cursor="Hand"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <Button x:Name="SpeedButtonHalf"   Style="{StaticResource SpeedButtonStyle}" Content="0.5" Margin="3,0" Click="SpeedButton_Click"/>
+                        <Button x:Name="SpeedButtonNormal" Style="{StaticResource SpeedButtonStyle}" Content="1"   Margin="3,0" Click="SpeedButton_Click"/>
+                        <Button x:Name="SpeedButtonDouble" Style="{StaticResource SpeedButtonStyle}" Content="2"   Margin="3,0" Click="SpeedButton_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Border 
+            Grid.Row="1" 
+            Grid.Column="0" 
+            Style="{StaticResource GlassPanelStyle}">
+            <Grid x:Name="FoldersAccessGrid">
+                <TreeView 
+                    x:Name="FoldersTreeView" 
+                    SelectedItemChanged="FoldersTreeView_OnSelectedItemChanged"/>
+            </Grid>
+        </Border>
+
+        <Border
+            Grid.Row="1" 
+            Grid.Column="1" 
+            Grid.ColumnSpan="2"
+            Style="{StaticResource GlassPanelStyle}">
+            <Grid x:Name="TrackListGrid">
+                <DataGrid x:Name="TrackDataGrid"
+                          CanUserResizeColumns="True"
+                          CanUserSortColumns="True"
+                          CanUserAddRows="False"
+                          IsReadOnly="True"
+                          CanUserDeleteRows="False"
+                          AutoGenerateColumns="False"
+                          SelectionMode="Single"
+                          SelectionUnit="FullRow"
+                          SelectionChanged="TrackDataGrid_OnSelectionChanged"
+                          ItemsSource="{Binding AudioFiles}"
+                          Cursor="Hand">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
+                        <DataGridTextColumn Header="Исполнитель" Binding="{Binding Artist}" Width="*"/>
+                        <DataGridTextColumn Header="Альбом" Binding="{Binding Album}" Width="*"/>
+                        <DataGridTextColumn Header="Длительность" Binding="{Binding Duration}" Width="Auto"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+
+        <GridSplitter 
+            Grid.Column="0" 
             Grid.Row="1"
-            Width="5"
+            Width="5" 
             Background="Transparent"
-            ResizeBehavior="BasedOnAlignment"
+            ResizeBehavior="BasedOnAlignment" 
             ResizeDirection="Columns"/>
-        <GridSplitter
-            Grid.ColumnSpan="3"
-            Grid.Column="0"
+
+        <GridSplitter 
+            Grid.Column="0" 
+            Grid.ColumnSpan="3" 
             Grid.Row="0"
-            Height="5"
-            Background="Transparent"
-            HorizontalAlignment="Stretch"
+            Height="5" Background="Transparent"
+            HorizontalAlignment="Stretch" 
             VerticalAlignment="Bottom"
-            ResizeBehavior="BasedOnAlignment"
+            ResizeBehavior="BasedOnAlignment" 
             ResizeDirection="Rows"/>
     </Grid>
 </Window>
