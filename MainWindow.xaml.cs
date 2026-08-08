@@ -20,18 +20,24 @@ public partial class MainWindow
     private const string TrackPlaceholderImgPath = "Image/track_placeholder.png";
     private const string TrackStopImgPath = "Image/stop.png";
     private const string TrackPlayImgPath = "Image/play.png";
+    private const string ProgressSliderTemplateName = "PART_Track";
     private const double TrackProgressTimerTickFreq = 0.15;
 
     private bool _isTrackPlaying;
     private bool _isDragging;
     private TimeSpan _totalDuration;
-    private AudioFileInfo? _currentTrack = null;
+    private AudioFileInfo? _currentTrack;
     
-    public ObservableCollection<AudioFileInfo> AudioFiles { get; set; } = [];
-    private MediaPlayer Player { get; set; } = new();
+    public ObservableCollection<AudioFileInfo> AudioFiles { get; } = [];
+    private MediaPlayer Player { get; } = new();
     private readonly DispatcherTimer? _trackProgressTimer;
 
+    private readonly BitmapImage _stopTrackBitmapImage        = new(new Uri(TrackStopImgPath, UriKind.Relative));
+    private readonly BitmapImage _playTrackBitmapImage        = new(new Uri(TrackPlayImgPath, UriKind.Relative));
+    private readonly BitmapImage _trackPlaceholderBitmapImage = new(new Uri(TrackPlaceholderImgPath, UriKind.Relative));
+
     private static readonly Regex SoundFileRegex = MyRegex();
+    
     #region SoundFileRegex
 
     [GeneratedRegex(@"^.*\.(mp3|wav|wma|asf|avi)$", RegexOptions.IgnoreCase | RegexOptions.Compiled,
@@ -52,20 +58,22 @@ public partial class MainWindow
         {
             Interval = TimeSpan.FromSeconds(TrackProgressTimerTickFreq)
         };
+        
         Player.Volume = VolumeSlider.Value;
     }
     
     private void InitializeSliderThumb(object sender, RoutedEventArgs e)
     {
         ProgressSlider.ApplyTemplate();
+        
+        var findName = ProgressSlider.Template.FindName(ProgressSliderTemplateName, ProgressSlider);
+        if (findName is not Track track)  return;
 
-        var track = ProgressSlider.Template.FindName("PART_Track", ProgressSlider) as Track;
-        var thumb = track?.Thumb;
-        if (thumb != null)
-        {
-            thumb.DragStarted += Thumb_DragStarted;
-            thumb.DragCompleted += Thumb_DragCompleted;
-        }
+        var thumb = track.Thumb;
+        if (thumb == null) return;
+        
+        thumb.DragStarted   += Thumb_DragStarted;
+        thumb.DragCompleted += Thumb_DragCompleted;
     }
 
     private void FoldersTreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -153,7 +161,7 @@ public partial class MainWindow
         }
         else
         {
-            TrackImage.Source = new BitmapImage(new Uri(TrackPlaceholderImgPath, UriKind.Relative));
+            TrackImage.Source = _trackPlaceholderBitmapImage;
         }
 
         TrackNameTextBlock.Text = _currentTrack.Value.Name;
@@ -178,7 +186,7 @@ public partial class MainWindow
 
         var selectedTrackUri = new Uri(_currentTrack.Value.FilePath, UriKind.Absolute);
 
-        StopTrackPlaying(true);
+        StopTrack();
 
         Player.Close();
         Player.Open(selectedTrackUri);
@@ -190,8 +198,6 @@ public partial class MainWindow
         Player.MediaEnded += OnMediaEnded;
     }
 
-    #region VoidGetBitmapImageFromPicture
-
     private static BitmapImage? GetBitmapImageFromPicture(IPicture p)
     {
         if (p.Data.IsEmpty) return null;
@@ -199,44 +205,44 @@ public partial class MainWindow
         using var stream = new MemoryStream(p.Data.Data);
         var bmp = new BitmapImage();
         bmp.BeginInit();
-        bmp.CacheOption = BitmapCacheOption.OnLoad;
+        bmp.CacheOption  = BitmapCacheOption.OnLoad;
         bmp.StreamSource = stream;
         bmp.EndInit();
 
         return bmp;
     }
-    #endregion
 
     private void OnMediaOpened(object? sender, EventArgs e)
     {
         _totalDuration = Player.NaturalDuration.TimeSpan;
-        PlayTrackPlaying();
+        PlayTrack();
     }
 
-
-    private void PlayTrackPlaying()
+    private void PlayTrack()
     {
-        PlayPauseImage.Source = new BitmapImage(new Uri(TrackPlayImgPath, UriKind.Relative));
+        PlayPauseImage.Source = _stopTrackBitmapImage;
         StartTrackProgressTimer();
         Player.Play();
-        
         _isTrackPlaying = true;
     }
 
-    private void StopTrackPlaying(bool resetProgressSlider = false)
+    private void PauseTrack()
     {
-        PlayPauseImage.Source = new BitmapImage(new Uri(TrackStopImgPath, UriKind.Relative));
+        PlayPauseImage.Source = _playTrackBitmapImage;
         Player.Pause();
         StopTrackProgressTimer();
-        
-        if (resetProgressSlider)
-        {
-            ProgressSlider.Value = 0;
-        }
-
         _isTrackPlaying = false;
     }
 
+    private void StopTrack()
+    {
+        PlayPauseImage.Source = _playTrackBitmapImage;
+        Player.Stop();
+        StopTrackProgressTimer();
+        ProgressSlider.Value = 0;
+        _isTrackPlaying = false;
+    }
+    
     private void StartTrackProgressTimer()
     {
         Debug.WriteLineIf(_trackProgressTimer == null, "ERROR: _trackProgressTimer == null");
@@ -250,8 +256,8 @@ public partial class MainWindow
     {
         if (_isDragging || !Player.NaturalDuration.HasTimeSpan || !(_totalDuration.TotalSeconds > 0)) return;
 
-        var current = Player.Position.TotalSeconds;
-        var total = _totalDuration.TotalSeconds;
+        var current    = Player.Position.TotalSeconds;
+        var total      = _totalDuration.TotalSeconds;
         ProgressSlider.Value = current / total;
     }
 
@@ -277,20 +283,35 @@ public partial class MainWindow
 
         if (_isTrackPlaying)
         {
-            StopTrackPlaying();
+            PauseTrack();
         }
         else
         {
-            PlayTrackPlaying();
+            if (IsTrackEnded())
+            {
+                StopTrack();
+                PlayTrack();
+            }
+            else
+            {
+                PlayTrack();
+            }
         }
     }
+
+    private bool IsTrackEnded()
+    {
+        return Player.Position == _totalDuration;
+    }
+
     private void RewindButton_Click(object sender, RoutedEventArgs e)
     {
         if (!Player.HasAudio) return;
 
         Player.Stop();
         ProgressSlider.Value = 0;
-        if(_isTrackPlaying)
+        
+        if (_isTrackPlaying)
         {
             Player.Play();
         }
@@ -298,8 +319,7 @@ public partial class MainWindow
 
     private void ForwardButton_Click(object sender, RoutedEventArgs e)
     {
-        StopTrackPlaying(true);
-
+        StopTrack();
         PlayNextTrack();
     }
 
@@ -339,8 +359,8 @@ public partial class MainWindow
     private void ProgressSlider_PreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
         if (e.OriginalSource is Ellipse) return;
-
-        var slider = (Slider)sender;
+        
+        if (sender is not Slider slider) return;
 
         var fraction = Math.Clamp(e.GetPosition(slider).X / slider.ActualWidth, 0, 1);
         slider.Value = fraction;
@@ -354,16 +374,17 @@ public partial class MainWindow
 
     private void OnMediaEnded(object? sender, EventArgs e)
     {
+        PlayPauseImage.Source = _playTrackBitmapImage;
+        // if (если включено проигрывание всех треков друг за другом)
         PlayNextTrack();
     }
 
     private void PlayNextTrack()
     {
-        var currentTrack = _currentTrack;
-        if (currentTrack == null) return;
-
+        if (_currentTrack is not null) return;
         var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
-        if (currentIndex < 0) return;
+        
+        if (currentIndex < 0 || currentIndex == AudioFiles.Count - 1) return;
 
         var nextIndex = currentIndex + 1;
         if (nextIndex >= AudioFiles.Count)
@@ -374,8 +395,8 @@ public partial class MainWindow
         }
 
         var nextTrack = AudioFiles[nextIndex];
+        
         SetCurrentTrack(nextTrack);
-
         TrackDataGrid.SelectedItem = nextTrack;
     }
 }
