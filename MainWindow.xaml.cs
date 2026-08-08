@@ -6,8 +6,10 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 using TagLib;
 
@@ -15,11 +17,10 @@ namespace AudioPlayer;
 
 public partial class MainWindow
 {
-    private static readonly Regex SoundFileRegex = MyRegex();
     private const string TrackPlaceholderImgPath = "Image/track_placeholder.png";
     private const string TrackStopImgPath = "Image/stop.png";
     private const string TrackPlayImgPath = "Image/play.png";
-    private const double TrackProgressTimerTickFreq = 0.5;
+    private const double TrackProgressTimerTickFreq = 0.15;
 
     private bool _isTrackPlaying;
     private bool _isDragging;
@@ -30,9 +31,10 @@ public partial class MainWindow
     private MediaPlayer Player { get; set; } = new();
     private readonly DispatcherTimer? _trackProgressTimer;
 
+    private static readonly Regex SoundFileRegex = MyRegex();
     #region SoundFileRegex
-    
-        [GeneratedRegex(@"^.*\.(mp3|wav|wma|asf|avi)$", RegexOptions.IgnoreCase | RegexOptions.Compiled,
+
+    [GeneratedRegex(@"^.*\.(mp3|wav|wma|asf|avi)$", RegexOptions.IgnoreCase | RegexOptions.Compiled,
             "en-US")]
         private static partial Regex MyRegex();
 
@@ -44,15 +46,16 @@ public partial class MainWindow
 
         FolderTreeManager.BuildTree(FoldersTreeView);
         DataContext = this;
-        Loaded += MainWindow_Loaded;
+        Loaded += InitializeSliderThumb;
         
         _trackProgressTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(TrackProgressTimerTickFreq)
         };
+        Player.Volume = VolumeSlider.Value;
     }
     
-    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    private void InitializeSliderThumb(object sender, RoutedEventArgs e)
     {
         ProgressSlider.ApplyTemplate();
 
@@ -63,9 +66,8 @@ public partial class MainWindow
             thumb.DragStarted += Thumb_DragStarted;
             thumb.DragCompleted += Thumb_DragCompleted;
         }
-        Player.Volume = VolumeSlider.Value;
     }
-    
+
     private void FoldersTreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
         if (FoldersTreeView.SelectedItem is not TreeViewItem item) return;
@@ -96,7 +98,7 @@ public partial class MainWindow
                 {
                     FilePath = file,
                     Name = string.IsNullOrEmpty(tagFile.Tag.Title)
-                           ? Path.GetFileNameWithoutExtension(file)
+                           ? System.IO.Path.GetFileNameWithoutExtension(file)
                            : tagFile.Tag.Title,
                     Artist = string.IsNullOrEmpty(tagFile.Tag.FirstPerformer)
                              ? "Неизвестен"
@@ -114,7 +116,7 @@ public partial class MainWindow
                 AudioFiles.Add(new AudioFileInfo
                 {
                     FilePath = file,
-                    Name = Path.GetFileNameWithoutExtension(file),
+                    Name = System.IO.Path.GetFileNameWithoutExtension(file),
                     Artist = "Ошибка",
                     Album = "Ошибка",
                     Duration = "00:00"
@@ -122,145 +124,14 @@ public partial class MainWindow
             }
         }
     }
-
-    private void RewindButton_Click(object sender, RoutedEventArgs e)
-    {
-
-    }
-
-    private void PlayPauseButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (!Player.HasAudio)
-        {
-            MessageBox.Show("Не выбран трек или выбран медиафайл без аудио!", "Ошибка!", 
-                MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        if (_isTrackPlaying)
-        {
-            PauseTrackPlaying();
-        }
-        else
-        {
-            ResumeTrackPlaying();
-        }
-    }
-
-    private void ResumeTrackPlaying(bool resetProgressSlider = false)
-    {
-        PlayPauseImage.Source = new BitmapImage(new Uri(TrackPlayImgPath, UriKind.Relative));
-        StartTrackProgressTimer();
-        Player.Play();
-
-        if (resetProgressSlider)
-        {
-            ProgressSlider.Value = 0;
-        }
-        
-        _isTrackPlaying = true;
-    }
-
-    private void PauseTrackPlaying(bool resetProgressSlider = false)
-    {
-        PlayPauseImage.Source = new BitmapImage(new Uri(TrackStopImgPath, UriKind.Relative));
-        Player.Pause();
-        StopTrackProgressTimer();
-        
-        if (resetProgressSlider)
-        {
-            ProgressSlider.Value = 0;
-        }
-
-        _isTrackPlaying = false;
-    }
-
-    private void ForwardButton_Click(object sender, RoutedEventArgs e)
-    {
-
-    }
-
-    private void SpeedButton_Click(object sender, RoutedEventArgs e)
-    {
-        Debug.WriteLineIf(sender is not Button, "ERROR: sender is not Button");
-        if (sender is not Button button) return;
-
-        var content = button.Content.ToString();
-        var condition = !double.TryParse(content, out var speed);
-        
-        Debug.WriteLineIf(condition, "ERROR: !double.TryParse(content, ...)");
-        if (condition) return;
-        
-        Player.SpeedRatio = speed;
-    }
-
     private void TrackDataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         Debug.WriteLineIf(TrackDataGrid.SelectedItem is not AudioFileInfo,
             "ERROR: TrackDataGrid.SelectedItem is not AudioFileInfo");
-        
+
         if (TrackDataGrid.SelectedItem is not AudioFileInfo selectedTrackInfo) return;
 
         SetCurrentTrack(selectedTrackInfo);
-    }
-
-    private void OnMediaOpened(object? sender, EventArgs e)
-    {
-        _totalDuration = Player.NaturalDuration.TimeSpan;
-        ResumeTrackPlaying(true);
-    }
-
-    private void ProgressSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-
-    }
-
-    private void Thumb_DragStarted(object sender, DragStartedEventArgs e)
-    {
-        _isDragging = true;
-    }
-
-    private void Thumb_DragCompleted(object sender, DragCompletedEventArgs e)
-    {
-        _isDragging = false;
-        if (!Player.NaturalDuration.HasTimeSpan) return;
-        
-        var newPositionSeconds = _totalDuration.TotalSeconds * ProgressSlider.Value;
-        Player.Position = TimeSpan.FromSeconds(newPositionSeconds);
-    }
-    
-    private void StartTrackProgressTimer()
-    {
-        Debug.WriteLineIf(_trackProgressTimer == null, "ERROR: _trackProgressTimer == null");
-        if (_trackProgressTimer == null) return;
-        
-        _trackProgressTimer.Tick += TrackProgressTimerTick;
-        _trackProgressTimer.Start();
-    }
-
-    private void TrackProgressTimerTick(object? sender, EventArgs e)
-    {
-        if (_isDragging || !Player.NaturalDuration.HasTimeSpan || !(_totalDuration.TotalSeconds > 0)) return;
-        
-        var current = Player.Position.TotalSeconds;
-        var total   = _totalDuration.TotalSeconds;
-        ProgressSlider.Value = current / total;
-    }
-
-    private void StopTrackProgressTimer()
-    {
-        Debug.WriteLineIf(_trackProgressTimer == null, "ERROR: _trackProgressTimer == null");
-        
-        if (!_isTrackPlaying || _trackProgressTimer == null) return;
-
-        _trackProgressTimer.Tick -= TrackProgressTimerTick;
-        _trackProgressTimer.Stop();
-        _isTrackPlaying = false;
-    }
-
-    private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        Player.Volume = e.NewValue;
     }
 
     private void SetCurrentTrack(AudioFileInfo trackInfo)
@@ -307,14 +178,19 @@ public partial class MainWindow
 
         var selectedTrackUri = new Uri(_currentTrack.Value.FilePath, UriKind.Absolute);
 
-        PauseTrackPlaying(true);
+        StopTrackPlaying(true);
+
+        Player.Close();
+        Player.Open(selectedTrackUri);
 
         Player.MediaOpened -= OnMediaOpened;
         Player.MediaOpened += OnMediaOpened;
 
-        Player.Close();
-        Player.Open(selectedTrackUri);
+        Player.MediaEnded -= OnMediaEnded;
+        Player.MediaEnded += OnMediaEnded;
     }
+
+    #region VoidGetBitmapImageFromPicture
 
     private static BitmapImage? GetBitmapImageFromPicture(IPicture p)
     {
@@ -328,5 +204,178 @@ public partial class MainWindow
         bmp.EndInit();
 
         return bmp;
+    }
+    #endregion
+
+    private void OnMediaOpened(object? sender, EventArgs e)
+    {
+        _totalDuration = Player.NaturalDuration.TimeSpan;
+        PlayTrackPlaying();
+    }
+
+
+    private void PlayTrackPlaying()
+    {
+        PlayPauseImage.Source = new BitmapImage(new Uri(TrackPlayImgPath, UriKind.Relative));
+        StartTrackProgressTimer();
+        Player.Play();
+        
+        _isTrackPlaying = true;
+    }
+
+    private void StopTrackPlaying(bool resetProgressSlider = false)
+    {
+        PlayPauseImage.Source = new BitmapImage(new Uri(TrackStopImgPath, UriKind.Relative));
+        Player.Pause();
+        StopTrackProgressTimer();
+        
+        if (resetProgressSlider)
+        {
+            ProgressSlider.Value = 0;
+        }
+
+        _isTrackPlaying = false;
+    }
+
+    private void StartTrackProgressTimer()
+    {
+        Debug.WriteLineIf(_trackProgressTimer == null, "ERROR: _trackProgressTimer == null");
+        if (_trackProgressTimer == null) return;
+
+        _trackProgressTimer.Tick += TrackProgressTimerTick;
+        _trackProgressTimer.Start();
+    }
+
+    private void TrackProgressTimerTick(object? sender, EventArgs e)
+    {
+        if (_isDragging || !Player.NaturalDuration.HasTimeSpan || !(_totalDuration.TotalSeconds > 0)) return;
+
+        var current = Player.Position.TotalSeconds;
+        var total = _totalDuration.TotalSeconds;
+        ProgressSlider.Value = current / total;
+    }
+
+    private void StopTrackProgressTimer()
+    {
+        Debug.WriteLineIf(_trackProgressTimer == null, "ERROR: _trackProgressTimer == null");
+
+        if (!_isTrackPlaying || _trackProgressTimer == null) return;
+
+        _trackProgressTimer.Tick -= TrackProgressTimerTick;
+        _trackProgressTimer.Stop();
+        _isTrackPlaying = false;
+    }
+
+    private void PlayPauseButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!Player.HasAudio)
+        {
+            MessageBox.Show("Не выбран трек или выбран медиафайл без аудио!", "Ошибка!",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (_isTrackPlaying)
+        {
+            StopTrackPlaying();
+        }
+        else
+        {
+            PlayTrackPlaying();
+        }
+    }
+    private void RewindButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!Player.HasAudio) return;
+
+        Player.Stop();
+        ProgressSlider.Value = 0;
+        if(_isTrackPlaying)
+        {
+            Player.Play();
+        }
+    }
+
+    private void ForwardButton_Click(object sender, RoutedEventArgs e)
+    {
+        StopTrackPlaying(true);
+
+        PlayNextTrack();
+    }
+
+    private void Thumb_DragStarted(object sender, DragStartedEventArgs e)
+    {
+        _isDragging = true;
+    }
+
+    private void Thumb_DragCompleted(object sender, DragCompletedEventArgs e)
+    {
+        _isDragging = false;
+        if (!Player.NaturalDuration.HasTimeSpan) return;
+        
+        var newPositionSeconds = _totalDuration.TotalSeconds * ProgressSlider.Value;
+        Player.Position = TimeSpan.FromSeconds(newPositionSeconds);
+    }
+
+    private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        Player.Volume = e.NewValue;
+    }
+
+    private void SpeedButton_Click(object sender, RoutedEventArgs e)
+    {
+        Debug.WriteLineIf(sender is not Button, "ERROR: sender is not Button");
+        if (sender is not Button button) return;
+
+        var content = button.Content.ToString();
+        var condition = !double.TryParse(content, out var speed);
+
+        Debug.WriteLineIf(condition, "ERROR: !double.TryParse(content, ...)");
+        if (condition) return;
+
+        Player.SpeedRatio = speed;
+    }
+
+    private void ProgressSlider_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is Ellipse) return;
+
+        var slider = (Slider)sender;
+
+        var fraction = Math.Clamp(e.GetPosition(slider).X / slider.ActualWidth, 0, 1);
+        slider.Value = fraction;
+
+        if (!Player.HasAudio) return;
+        
+        Player.Position = TimeSpan.FromSeconds(_totalDuration.TotalSeconds * fraction);
+
+        e.Handled = true;
+    }
+
+    private void OnMediaEnded(object? sender, EventArgs e)
+    {
+        PlayNextTrack();
+    }
+
+    private void PlayNextTrack()
+    {
+        var currentTrack = _currentTrack;
+        if (currentTrack == null) return;
+
+        var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
+        if (currentIndex < 0) return;
+
+        var nextIndex = currentIndex + 1;
+        if (nextIndex >= AudioFiles.Count)
+        {
+            MessageBox.Show("В папке больше нет треков для воспроизведения!", "Ошибка!",
+             MessageBoxButton.OK);
+            return;
+        }
+
+        var nextTrack = AudioFiles[nextIndex];
+        SetCurrentTrack(nextTrack);
+
+        TrackDataGrid.SelectedItem = nextTrack;
     }
 }

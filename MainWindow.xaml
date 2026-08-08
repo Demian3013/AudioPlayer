@@ -148,12 +148,12 @@
                 Minimum="0"
                 Maximum="1"
                 Value="0"
-                ValueChanged="ProgressSlider_ValueChanged"
                 SmallChange="0.01"
                 LargeChange="0.02"
                 Margin="10,5,10,5"
                 VerticalAlignment="Center"
-                Cursor="Hand"/>
+                Cursor="Hand"
+                PreviewMouseDown="ProgressSlider_PreviewMouseDown"/>
             <Grid Grid.Row="2" Margin="10,5,10,5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
