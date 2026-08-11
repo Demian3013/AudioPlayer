@@ -20,10 +20,12 @@ public partial class MainWindow
 {
     private enum PlaybackMode
     {
+        DontRepeat,
         RepeatAll,   
         RepeatOne,   
         Random
     }
+    
     private const string TrackPlaceholderImgPath = "Image/track_placeholder.png";
     private const string TrackStopImgPath = "Image/stop.png";
     private const string TrackPlayImgPath = "Image/play.png";
@@ -394,6 +396,12 @@ public partial class MainWindow
             case PlaybackMode.Random:
                 PlayRandomTrack();         
                 break;
+            // TODO
+            case PlaybackMode.DontRepeat:
+                StopTrack();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -402,8 +410,8 @@ public partial class MainWindow
         if (_currentTrack is null) return;
         var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
 
-        if (currentIndex < 0 || currentIndex == AudioFiles.Count - 1) return;
-
+        if (currentIndex < 0) return;
+        
         var nextIndex = currentIndex + 1;
         if (nextIndex >= AudioFiles.Count)
         {
