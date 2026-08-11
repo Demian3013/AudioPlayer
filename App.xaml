@@ -4,11 +4,11 @@
              xmlns:local="clr-namespace:AudioPlayer"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-
         <LinearGradientBrush x:Key="MainBg" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#1A1A2E" Offset="0"/>
-            <GradientStop Color="#16213E" Offset="0.5"/>
-            <GradientStop Color="#0F3460" Offset="1"/>
+            <GradientStop Color="#0A0A1A" Offset="0"/>
+            <GradientStop Color="#1A2A4A" Offset="0.4"/>
+            <GradientStop Color="#2A5A8A" Offset="0.8"/>
+            <GradientStop Color="#4A7AAA" Offset="1"/>
         </LinearGradientBrush>
 
         <SolidColorBrush x:Key="AccentBlue" Color="#1A73E8"/>
@@ -207,7 +207,6 @@
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="Thumb">
                                                             <Grid>
-                                                                <!-- Тень капсулы (чёрная, прозрачность 0.2, смещение) -->
                                                                 <Path Fill="Black" Opacity="0.2" Margin="1,1,0,0">
                                                                     <Path.Data>
                                                                         <CombinedGeometry GeometryCombineMode="Union">
@@ -227,7 +226,6 @@
                                                                         </CombinedGeometry>
                                                                     </Path.Data>
                                                                 </Path>
-                                                                <!-- Основная капсула (белая, обводка, как в SliderStyle) -->
                                                                 <Path Fill="{StaticResource PrimaryText}" 
                                                               Stroke="{StaticResource SecondaryText}" 
                                                               StrokeThickness="2" 
