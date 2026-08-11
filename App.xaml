@@ -76,6 +76,10 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
         </Style>
 
         <Style TargetType="TreeViewItem">
@@ -138,9 +142,114 @@
                                                 <Setter Property="Template">
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="Thumb">
+                                                            <Ellipse Fill="{StaticResource PrimaryText}" Stroke="{StaticResource SecondaryText}" StrokeThickness="2" Width="16" Height="16"/>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </Thumb.Style>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TrackEndModeSliderStyle" TargetType="Slider">
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto" MinHeight="10"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Track x:Name="PART_Track" Grid.Row="1" VerticalAlignment="Center">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge">
+                                        <RepeatButton.Style>
+                                            <Style TargetType="RepeatButton">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="RepeatButton">
+                                                            <Border Background="{StaticResource SecondaryText}" CornerRadius="3" Height="8" Margin="2,1,2,1"/>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </RepeatButton.Style>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="Slider.IncreaseLarge">
+                                        <RepeatButton.Style>
+                                            <Style TargetType="RepeatButton">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="RepeatButton">
+                                                            <Border Background="{StaticResource SecondaryText}" CornerRadius="3" Height="8" Margin="2,1,2,1"/>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </RepeatButton.Style>
+                                    </RepeatButton>
+                                </Track.IncreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb IsHitTestVisible="False">
+                                        <Thumb.Style>
+                                            <Style TargetType="Thumb">
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Thumb">
                                                             <Grid>
-                                                                <Ellipse Fill="White" Stroke="{StaticResource SecondaryText}" StrokeThickness="2" Width="16" Height="16"/>
-                                                                <Ellipse Fill="Black" Width="18" Height="18" Opacity="0.2" Margin="1,1,0,0"/>
+                                                                <!-- Тень капсулы (чёрная, прозрачность 0.2, смещение) -->
+                                                                <Path Fill="Black" Opacity="0.2" Margin="1,1,0,0">
+                                                                    <Path.Data>
+                                                                        <CombinedGeometry GeometryCombineMode="Union">
+                                                                            <CombinedGeometry.Geometry1>
+                                                                                <CombinedGeometry GeometryCombineMode="Union">
+                                                                                    <CombinedGeometry.Geometry1>
+                                                                                        <EllipseGeometry Center="8,9" RadiusX="8" RadiusY="7"/>
+                                                                                    </CombinedGeometry.Geometry1>
+                                                                                    <CombinedGeometry.Geometry2>
+                                                                                        <RectangleGeometry Rect="8,2,16,14"/>
+                                                                                    </CombinedGeometry.Geometry2>
+                                                                                </CombinedGeometry>
+                                                                            </CombinedGeometry.Geometry1>
+                                                                            <CombinedGeometry.Geometry2>
+                                                                                <EllipseGeometry Center="24,9" RadiusX="8" RadiusY="7"/>
+                                                                            </CombinedGeometry.Geometry2>
+                                                                        </CombinedGeometry>
+                                                                    </Path.Data>
+                                                                </Path>
+                                                                <!-- Основная капсула (белая, обводка, как в SliderStyle) -->
+                                                                <Path Fill="{StaticResource PrimaryText}" 
+                                                              Stroke="{StaticResource SecondaryText}" 
+                                                              StrokeThickness="2" 
+                                                              StrokeLineJoin="Round">
+                                                                    <Path.Data>
+                                                                        <CombinedGeometry GeometryCombineMode="Union">
+                                                                            <CombinedGeometry.Geometry1>
+                                                                                <CombinedGeometry GeometryCombineMode="Union">
+                                                                                    <CombinedGeometry.Geometry1>
+                                                                                        <EllipseGeometry Center="8,9" RadiusX="8" RadiusY="7"/>
+                                                                                    </CombinedGeometry.Geometry1>
+                                                                                    <CombinedGeometry.Geometry2>
+                                                                                        <RectangleGeometry Rect="8,2,16,14"/>
+                                                                                    </CombinedGeometry.Geometry2>
+                                                                                </CombinedGeometry>
+                                                                            </CombinedGeometry.Geometry1>
+                                                                            <CombinedGeometry.Geometry2>
+                                                                                <EllipseGeometry Center="24,9" RadiusX="8" RadiusY="7"/>
+                                                                            </CombinedGeometry.Geometry2>
+                                                                        </CombinedGeometry>
+                                                                    </Path.Data>
+                                                                </Path>
                                                             </Grid>
                                                         </ControlTemplate>
                                                     </Setter.Value>
@@ -187,6 +296,29 @@
                 <Trigger Property="IsPressed" Value="True">
                     <Setter Property="Background" Value="{StaticResource AccentBlue}"/>
                     <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="InvisibleButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="{TemplateBinding Background}">
+                            <ContentPresenter/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="Transparent"/>
                 </Trigger>
             </Style.Triggers>
         </Style>

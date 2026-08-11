@@ -11,7 +11,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
             <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="1.5*"/>
+            <ColumnDefinition Width="1.7*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -37,6 +37,7 @@
                        Stretch="UniformToFill"/>
                 <StackPanel 
                     Grid.Column="1" 
+                    Grid.ColumnSpan="2"
                     HorizontalAlignment="Left" 
                     VerticalAlignment="Top" 
                     Orientation="Horizontal">
@@ -163,7 +164,8 @@
                       Margin="10,5,10,5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <StackPanel 
                         Grid.Column="0"
@@ -184,9 +186,67 @@
                                 Width="100" 
                                 VerticalAlignment="Center"
                                 ValueChanged="VolumeSlider_ValueChanged"
-                                Cursor="Hand"/>
+                                Cursor="Hand"
+                                Margin="10"/>
                     </StackPanel>
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <StackPanel
+                        Grid.Column="1"
+                        Orientation="Horizontal">
+                        <StackPanel
+                            Grid.Column="1">
+                            <Label
+                                Content="Режим повтора"
+                                Foreground="{StaticResource SecondaryText}"
+                                HorizontalAlignment="Center"/>
+                            <Grid>
+                                <Slider 
+                                    x:Name="TrackEndModeSlider"
+                                    Style="{StaticResource TrackEndModeSliderStyle}"
+                                    Minimum="0" Maximum="2" 
+                                    TickFrequency="1" 
+                                    IsSnapToTickEnabled="True"
+                                    SmallChange="1" LargeChange="1"
+                                    Value="0"
+                                    Width="100" 
+                                    HorizontalAlignment="Center"
+                                    ValueChanged="TrackEndModeSlider_ValueChanged"
+                                    IsHitTestVisible="False"   
+                                    Cursor="Hand"/>
+
+                                <Button 
+                                    x:Name="InvisibleSliderButton"
+                                    Style="{StaticResource InvisibleButtonStyle}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    Width="100" Height="20"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Click="InvisibleSliderButton_Click"
+                                    Margin="10,0,0,0"/>
+                            </Grid>
+                        </StackPanel>
+                        <Label 
+                            x:Name="TrackEndModeLabel"
+                            Foreground="{StaticResource SecondaryText}"
+                            Width="75"
+                            HorizontalAlignment="Center"
+                            Margin="5"
+                            VerticalAlignment="Center">
+                            <Label.ContentTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" 
+                                    TextWrapping="Wrap" 
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                                </DataTemplate>
+                            </Label.ContentTemplate>
+                            <Label.Content>
+                                Все треки подряд
+                            </Label.Content>
+                        </Label>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Button x:Name="SpeedButtonHalf"   Style="{StaticResource SpeedButtonStyle}" Content="0.5" Margin="3,0" Click="SpeedButton_Click"/>
                         <Button x:Name="SpeedButtonNormal" Style="{StaticResource SpeedButtonStyle}" Content="1"   Margin="3,0" Click="SpeedButton_Click"/>
                         <Button x:Name="SpeedButtonDouble" Style="{StaticResource SpeedButtonStyle}" Content="2"   Margin="3,0" Click="SpeedButton_Click"/>
@@ -206,24 +266,33 @@
             </Grid>
         </Border>
 
-        <Border
-            Grid.Row="1" 
-            Grid.Column="1" 
-            Grid.ColumnSpan="2"
-            Style="{StaticResource GlassPanelStyle}">
+        <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+        Style="{StaticResource GlassPanelStyle}">
             <Grid x:Name="TrackListGrid">
+                <Grid.OpacityMask>
+                    <VisualBrush Stretch="Fill">
+                        <VisualBrush.Visual>
+                            <Border Background="White" 
+                            CornerRadius="15" 
+                            Width="{Binding ActualWidth, ElementName=TrackListGrid}" 
+                            Height="{Binding ActualHeight, ElementName=TrackListGrid}"/>
+                        </VisualBrush.Visual>
+                    </VisualBrush>
+                </Grid.OpacityMask>
+
                 <DataGrid x:Name="TrackDataGrid"
-                          CanUserResizeColumns="True"
-                          CanUserSortColumns="True"
-                          CanUserAddRows="False"
-                          IsReadOnly="True"
-                          CanUserDeleteRows="False"
-                          AutoGenerateColumns="False"
-                          SelectionMode="Single"
-                          SelectionUnit="FullRow"
-                          SelectionChanged="TrackDataGrid_OnSelectionChanged"
-                          ItemsSource="{Binding AudioFiles}"
-                          Cursor="Hand">
+                  CanUserResizeColumns="True"
+                  CanUserSortColumns="True"
+                  CanUserAddRows="False"
+                  IsReadOnly="True"
+                  CanUserDeleteRows="False"
+                  AutoGenerateColumns="False"
+                  SelectionMode="Single"
+                  SelectionUnit="FullRow"
+                  SelectionChanged="TrackDataGrid_OnSelectionChanged"
+                  ItemsSource="{Binding AudioFiles}"
+                  Cursor="Hand"
+                  Margin="0,0,0,15">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
                         <DataGridTextColumn Header="Исполнитель" Binding="{Binding Artist}" Width="*"/>
@@ -237,7 +306,7 @@
         <GridSplitter 
             Grid.Column="0" 
             Grid.Row="1"
-            Width="5" 
+            Width="7" 
             Background="Transparent"
             ResizeBehavior="BasedOnAlignment" 
             ResizeDirection="Columns"/>
@@ -246,10 +315,18 @@
             Grid.Column="0" 
             Grid.ColumnSpan="3" 
             Grid.Row="0"
-            Height="5" Background="Transparent"
+            Height="7" Background="Transparent"
             HorizontalAlignment="Stretch" 
             VerticalAlignment="Bottom"
             ResizeBehavior="BasedOnAlignment" 
             ResizeDirection="Rows"/>
+
+        <GridSplitter 
+            Grid.Column="1" 
+            Grid.Row="0"
+            Width="7" 
+            Background="Transparent"
+            ResizeBehavior="BasedOnAlignment" 
+            ResizeDirection="Columns"/>
     </Grid>
 </Window>
