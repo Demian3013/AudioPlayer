@@ -206,7 +206,7 @@
                                     TickFrequency="1" 
                                     IsSnapToTickEnabled="True"
                                     SmallChange="1" LargeChange="1"
-                                    Value="1"
+                                    Value="0"
                                     Width="100" 
                                     HorizontalAlignment="Center"
                                     ValueChanged="TrackEndModeSlider_ValueChanged"
@@ -223,7 +223,7 @@
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
                                     Click="InvisibleSliderButton_Click"
-                                    Margin="5,0,0,0"/>
+                                    Margin="10,0,0,0"/>
                             </Grid>
                         </StackPanel>
                         <Label 
@@ -242,15 +242,11 @@
                                 </DataTemplate>
                             </Label.ContentTemplate>
                             <Label.Content>
-                                Только этот трек
+                                Все треки подряд
                             </Label.Content>
                         </Label>
                     </StackPanel>
-                    <StackPanel 
-                        Grid.Column="2" 
-                        Orientation="Horizontal" 
-                        HorizontalAlignment="Right" 
-                        VerticalAlignment="Center">
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                         <Button x:Name="SpeedButtonHalf"   Style="{StaticResource SpeedButtonStyle}" Content="0.5" Margin="3,0" Click="SpeedButton_Click"/>
                         <Button x:Name="SpeedButtonNormal" Style="{StaticResource SpeedButtonStyle}" Content="1"   Margin="3,0" Click="SpeedButton_Click"/>
                         <Button x:Name="SpeedButtonDouble" Style="{StaticResource SpeedButtonStyle}" Content="2"   Margin="3,0" Click="SpeedButton_Click"/>
