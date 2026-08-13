@@ -1,8 +1,7 @@
-﻿using AudioPlayer.Manager;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection.Metadata.Ecma335;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using AudioPlayer.Manager;
 using TagLib;
 
 namespace AudioPlayer;
@@ -20,10 +20,10 @@ public partial class MainWindow
 {
     private enum PlaybackMode
     {
-        DontRepeat,
         RepeatAll,   
         RepeatOne,   
-        Random
+        Random,
+        DontRepeat
     }
     
     private const string TrackPlaceholderImgPath = "Image/track_placeholder.png";
@@ -70,6 +70,20 @@ public partial class MainWindow
         };
 
         Player.Volume = VolumeSlider.Value;
+
+        _currentMode = GetSliderPlaybackMode();
+    }
+
+    private PlaybackMode GetSliderPlaybackMode()
+    {
+        var playbackModes = Enum.GetValues<PlaybackMode>();
+        
+        if (TrackEndModeSlider.Value >= playbackModes.Length)
+        {
+            throw new InvalidEnumArgumentException("Нет соответствующего этому индексу значения в PlaybackMode перечислении");
+        }
+        
+        return (PlaybackMode)TrackEndModeSlider.Value;
     }
 
     private void InitializeSliderThumb(object sender, RoutedEventArgs e)
@@ -141,24 +155,8 @@ public partial class MainWindow
                 });
             }
         }
-
-        if (_isTrackPlaying || AudioFiles.Count == 0) return;
-
-        _currentTrack = AudioFiles[0];
-
-        if (_currentMode == PlaybackMode.RepeatAll)
-        {
-            SetCurrentTrack(AudioFiles[0]);
-            PlayTrack();
-        }
-
-        if (_currentMode == PlaybackMode.Random)
-        {
-            var rand = new Random();
-            SetCurrentTrack(AudioFiles[rand.Next(0, AudioFiles.Count)]);
-            PlayTrack();
-        }
     }
+    
     private void TrackDataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         Debug.WriteLineIf(TrackDataGrid.SelectedItem is not AudioFileInfo,
@@ -301,34 +299,40 @@ public partial class MainWindow
 
     private void PlayPauseButton_Click(object sender, RoutedEventArgs e)
     {
+        if (_isTrackPlaying)
+        {
+            PauseTrack();
+            return;
+        }
+        
+        switch (_currentMode)
+        {
+            case PlaybackMode.DontRepeat when IsTrackEnded():
+                StopTrack();
+                PlayTrack();
+                return;
+            case PlaybackMode.RepeatAll:
+                SetCurrentTrack(AudioFiles[0]);
+                PlayTrack();
+                return;
+            case PlaybackMode.Random:
+                PlayRandomTrack();
+                return;
+        }
+
         if (!Player.HasAudio)
         {
             MessageBox.Show("Не выбран трек или выбран медиафайл без аудио!", "Ошибка!",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-
-        if (_isTrackPlaying)
-        {
-            PauseTrack();
-        }
-        else
-        {
-            if (IsTrackEnded())
-            {
-                StopTrack();
-                PlayTrack();
-            }
-            else
-            {
-                PlayTrack();
-            }
-        }
+            
+        PlayTrack();
     }
 
     private bool IsTrackEnded()
     {
-        return Player.Position == _totalDuration;
+        return _currentTrack != null && Player.Position == _totalDuration;
     }
 
     private void RewindButton_Click(object sender, RoutedEventArgs e)
@@ -347,6 +351,13 @@ public partial class MainWindow
     private void ForwardButton_Click(object sender, RoutedEventArgs e)
     {
         StopTrack();
+
+        if (_currentMode == PlaybackMode.Random)
+        {
+            PlayRandomTrack();
+            return;
+        }
+        
         PlayNextTrack();
     }
 
@@ -445,18 +456,18 @@ public partial class MainWindow
 
     private void PlayRandomTrack()
     {
-        if (AudioFiles.Count == 0 || _currentTrack is null) return;
-
-        var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
-
-        int randomIndex = currentIndex;         
-        if (AudioFiles.Count > 1)
+        if (AudioFiles.Count == 0) return;
+        
+        var rand = new Random();
+        var randomIndex = rand.Next(AudioFiles.Count);
+        
+        if (AudioFiles.Count > 1 && _currentTrack != null)
         {
-            var rand = new Random();
-            do
+            var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
+            while (randomIndex == currentIndex)
             {
                 randomIndex = rand.Next(AudioFiles.Count);
-            } while (randomIndex == currentIndex);
+            }
         }
 
         var randomTrack = AudioFiles[randomIndex];
@@ -471,22 +482,17 @@ public partial class MainWindow
 
     private void InvisibleSliderButton_Click(object sender, RoutedEventArgs e)
     {
-        int current = (int)TrackEndModeSlider.Value;
-        int next = (current + 1) % 3;
+        var current = (int)TrackEndModeSlider.Value;
+        var next = (current + 1) % 3;
         TrackEndModeSlider.Value = next;
-        _currentMode = (PlaybackMode)next; 
+        _currentMode = (PlaybackMode)next;
 
-        switch (next)
+        TrackEndModeLabel.Content = next switch
         {
-            case 0:
-                TrackEndModeLabel.Content = "Все треки подряд";
-                break;
-            case 1:
-                TrackEndModeLabel.Content = "Только этот трек";
-                break;
-            case 2:
-                TrackEndModeLabel.Content = "Случайный трек";
-                break;
-        }
+            0 => "Все треки подряд",
+            1 => "Только этот трек",
+            2 => "Случайный трек",
+            _ => TrackEndModeLabel.Content
+        };
     }
 }
