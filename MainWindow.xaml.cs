@@ -141,6 +141,23 @@ public partial class MainWindow
                 });
             }
         }
+
+        if (_isTrackPlaying || AudioFiles.Count == 0) return;
+
+        _currentTrack = AudioFiles[0];
+
+        if (_currentMode == PlaybackMode.RepeatAll)
+        {
+            SetCurrentTrack(AudioFiles[0]);
+            PlayTrack();
+        }
+
+        if (_currentMode == PlaybackMode.Random)
+        {
+            var rand = new Random();
+            SetCurrentTrack(AudioFiles[rand.Next(0, AudioFiles.Count)]);
+            PlayTrack();
+        }
     }
     private void TrackDataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
