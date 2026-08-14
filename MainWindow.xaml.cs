@@ -20,10 +20,10 @@ public partial class MainWindow
 {
     private enum PlaybackMode
     {
-        RepeatAll,   
-        RepeatOne,   
-        Random,
-        DontRepeat
+        DontRepeat,  
+        RepeatOne,
+        RepeatAll,
+        Random
     }
     
     private const string TrackPlaceholderImgPath = "Image/track_placeholder.png";
@@ -36,7 +36,7 @@ public partial class MainWindow
     private bool _isDragging;
     private TimeSpan _totalDuration;
     private AudioFileInfo? _currentTrack;
-    private PlaybackMode _currentMode = PlaybackMode.RepeatAll;
+    private PlaybackMode _currentMode = PlaybackMode.DontRepeat;
 
     public ObservableCollection<AudioFileInfo> AudioFiles { get; } = [];
     private MediaPlayer Player { get; } = new();
@@ -414,19 +414,18 @@ public partial class MainWindow
     {
         switch (_currentMode)
         {
-            case PlaybackMode.RepeatAll:
-                PlayNextTrack();          
+            case PlaybackMode.DontRepeat:
+                StopTrack();
                 break;
             case PlaybackMode.RepeatOne:
                 StopTrack();               
                 PlayTrack();               
                 break;
+            case PlaybackMode.RepeatAll:
+                PlayNextTrack();
+                break;
             case PlaybackMode.Random:
                 PlayRandomTrack();         
-                break;
-            // TODO
-            case PlaybackMode.DontRepeat:
-                StopTrack();
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -483,15 +482,16 @@ public partial class MainWindow
     private void InvisibleSliderButton_Click(object sender, RoutedEventArgs e)
     {
         var current = (int)TrackEndModeSlider.Value;
-        var next = (current + 1) % 3;
+        var next = (current + 1) % 4;
         TrackEndModeSlider.Value = next;
         _currentMode = (PlaybackMode)next;
 
         TrackEndModeLabel.Content = next switch
         {
-            0 => "Все треки подряд",
+            0 => "Не повторять",
             1 => "Только этот трек",
-            2 => "Случайный трек",
+            2 => "Все треки подряд",
+            3 => "Случайный трек",
             _ => TrackEndModeLabel.Content
         };
     }
