@@ -202,11 +202,11 @@
                                 <Slider 
                                     x:Name="TrackEndModeSlider"
                                     Style="{StaticResource TrackEndModeSliderStyle}"
-                                    Minimum="0" Maximum="3" 
+                                    Minimum="0" Maximum="2" 
                                     TickFrequency="1" 
                                     IsSnapToTickEnabled="True"
                                     SmallChange="1" LargeChange="1"
-                                    Value="0"
+                                    Value="1"
                                     Width="100" 
                                     HorizontalAlignment="Center"
                                     ValueChanged="TrackEndModeSlider_ValueChanged"
@@ -242,7 +242,7 @@
                                 </DataTemplate>
                             </Label.ContentTemplate>
                             <Label.Content>
-                                Не повторять
+                                Только этот трек
                             </Label.Content>
                         </Label>
                     </StackPanel>
