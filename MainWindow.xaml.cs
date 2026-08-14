@@ -36,7 +36,7 @@ public partial class MainWindow
     private bool _isDragging;
     private TimeSpan _totalDuration;
     private AudioFileInfo? _currentTrack;
-    private PlaybackMode _currentMode = PlaybackMode.RepeatAll;
+    private PlaybackMode _currentMode = PlaybackMode.DontRepeat;
 
     public ObservableCollection<AudioFileInfo> AudioFiles { get; } = [];
     private MediaPlayer Player { get; } = new();
@@ -414,19 +414,18 @@ public partial class MainWindow
     {
         switch (_currentMode)
         {
-            case PlaybackMode.RepeatAll:
-                PlayNextTrack();          
+            case PlaybackMode.DontRepeat:
+                StopTrack();
                 break;
             case PlaybackMode.RepeatOne:
                 StopTrack();               
                 PlayTrack();               
                 break;
+            case PlaybackMode.RepeatAll:
+                PlayNextTrack();
+                break;
             case PlaybackMode.Random:
                 PlayRandomTrack();         
-                break;
-            // TODO
-            case PlaybackMode.DontRepeat:
-                StopTrack();
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
