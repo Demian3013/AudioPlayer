@@ -11,7 +11,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using AudioPlayer.Manager;
 using TagLib;
 
 namespace AudioPlayer;
@@ -109,11 +108,10 @@ public partial class MainWindow
 
         AudioFiles.Clear();
         IEnumerable<string> files = [];
-
+        
         try
         {
-            files = Directory.EnumerateFiles(path)
-                             .Where(file => SoundFileRegex.IsMatch(file));
+            files = FolderTreeManager.GetFilesRecursive(path, SoundFileRegex);
         }
         catch (UnauthorizedAccessException ex)
         {
