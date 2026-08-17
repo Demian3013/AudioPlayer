@@ -143,14 +143,10 @@ public partial class MainWindow
             catch (UnauthorizedAccessException ex)
             {
                 Debug.WriteLine($"Ошибка чтения {file}: {ex.Message}");
-                AudioFiles.Add(new AudioFileInfo
-                {
-                    FilePath = file,
-                    Name = System.IO.Path.GetFileNameWithoutExtension(file),
-                    Artist = "Ошибка",
-                    Album = "Ошибка",
-                    Duration = "00:00"
-                });
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Debug.WriteLine($"Ошибка чтения {file}: {ex.Message}"); 
             }
         }
     }
@@ -225,14 +221,21 @@ public partial class MainWindow
     {
         if (p.Data.IsEmpty) return null;
 
-        using var stream = new MemoryStream(p.Data.Data);
-        var bmp = new BitmapImage();
-        bmp.BeginInit();
-        bmp.CacheOption = BitmapCacheOption.OnLoad;
-        bmp.StreamSource = stream;
-        bmp.EndInit();
-
-        return bmp;
+        try
+        {
+            using var stream = new MemoryStream(p.Data.Data);
+            var bmp = new BitmapImage();
+            bmp.BeginInit();
+            bmp.CacheOption = BitmapCacheOption.OnLoad;
+            bmp.StreamSource = stream;
+            bmp.EndInit();
+            return bmp;
+        }
+        catch (NotSupportedException ex)
+        {
+            Debug.WriteLine("NotSupportedException: " + ex.Message);
+            return null;
+        }       
     }
 
     private void OnMediaOpened(object? sender, EventArgs e)
@@ -440,8 +443,7 @@ public partial class MainWindow
         var nextIndex = currentIndex + 1;
         if (nextIndex >= AudioFiles.Count)
         {
-            MessageBox.Show("В папке больше нет треков для воспроизведения!", "Ошибка!",
-             MessageBoxButton.OK);
+            MessageBox.Show("Все треки воспроизведены!","", MessageBoxButton.OK);
             return;
         }
 
