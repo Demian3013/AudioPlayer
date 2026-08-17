@@ -9,23 +9,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Image\downloads.png" />
     <None Remove="Image\drive.png" />
     <None Remove="Image\forward.png" />
+    <None Remove="Image\music.png" />
     <None Remove="Image\play.png" />
     <None Remove="Image\rewind.png" />
     <None Remove="Image\stop.png" />
     <None Remove="Image\volume.png" />
-    <Resource Include="Image\drive.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <None Remove="Image\folder.png" />
+    <Resource Include="Image\downloads.png" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
-    <Resource Include="Image\folder.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+    <Resource Include="Image\drive.png" />
     <Resource Include="Image\forward.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Image\folder.png" />
+    <Resource Include="Image\music.png" />
     <Resource Include="Image\play.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>

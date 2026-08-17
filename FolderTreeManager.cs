@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using TagLib.Riff;
 
 namespace AudioPlayer;
 
@@ -12,6 +12,17 @@ public static class FolderTreeManager
 {
     private const string DriveImagePath  = "Image/drive.png";
     private const string FolderImagePath = "Image/folder.png";
+    private const string MusicImagePath = "Image/music.png";
+    private const string DownloadsImagePath = "Image/downloads.png";
+    private static readonly Guid MusicFolderGuid = new Guid("4BD8D571-6D19-48D3-BE97-422220080E43");
+    private static readonly Guid DownloadsFolderGuid = new Guid("374DE290-123F-4565-9164-39C4925E467B");
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern int SHGetKnownFolderPath(
+    [MarshalAs(UnmanagedType.LPStruct)] Guid rfid,
+    uint dwFlags,
+    IntPtr hToken,
+    out string pszPath);
 
     public static void BuildTree(TreeView treeView)
     {
@@ -23,8 +34,24 @@ public static class FolderTreeManager
             var driveItem = CreateTreeItem(name, path, DriveImagePath);
 
             treeView.Items.Add(driveItem);
-            
+
             LoadSubfolders(driveItem);
+        }
+
+        var folderPaths = new (string path, string image)[]
+            {
+                (GetKnownFolderPath(MusicFolderGuid), MusicImagePath),
+                (GetKnownFolderPath(DownloadsFolderGuid), DownloadsImagePath)
+            };
+
+        foreach (var (folderPath, image) in folderPaths)
+        {
+            if (string.IsNullOrEmpty(folderPath))
+                continue;
+
+            var folderItem = CreateTreeItem(Path.GetFileName(folderPath), folderPath, image);
+            treeView.Items.Add(folderItem);
+            LoadSubfolders(folderItem);
         }
     }
 
@@ -36,7 +63,7 @@ public static class FolderTreeManager
         {
             Source = new BitmapImage(new Uri(imagePath, UriKind.Relative)),
             Height = 14,
-            Width  = 14,
+            Width = 14,
             Margin = new Thickness(0, 0, 5, 0)
         });
 
@@ -93,7 +120,7 @@ public static class FolderTreeManager
     }
 
     public static IEnumerable<string> GetFilesRecursive(string dirPath, Regex regex)
-    {        
+    {
         if (!Directory.Exists(dirPath))
         {
             throw new DirectoryNotFoundException($"Указанная директория не существует: {dirPath}");
@@ -111,11 +138,11 @@ public static class FolderTreeManager
 
         if (subDirectories.Length == 0)
         {
-            return GetFilesWithRegex(dirPath, regex);        
+            return GetFilesWithRegex(dirPath, regex);
         }
 
         IEnumerable<string> subDirsFiles = [];
-        
+
         foreach (var subDirectory in subDirectories)
         {
             foreach (var subDirFile in GetFilesRecursive(subDirectory, regex))
@@ -125,15 +152,15 @@ public static class FolderTreeManager
         }
 
         var currentFolderFiles = GetFilesWithRegex(dirPath, regex);
-        
+
         foreach (var currentFolderFile in currentFolderFiles)
         {
             subDirsFiles = subDirsFiles.Append(currentFolderFile);
         }
-        
+
         return subDirsFiles;
     }
-    private static IEnumerable<string> GetFilesWithRegex (string dirPath, Regex regex) 
+    private static IEnumerable<string> GetFilesWithRegex(string dirPath, Regex regex)
     {
         var DirectoryEnumerateFiles = Enumerable.Empty<string>();
         try
@@ -146,5 +173,15 @@ public static class FolderTreeManager
         }
 
         return DirectoryEnumerateFiles;
+    }
+
+    private static string GetKnownFolderPath(Guid folderId)
+    {
+        var hr = SHGetKnownFolderPath(folderId, 0, IntPtr.Zero, out string path);
+
+        if (hr == 0)
+            return path;
+        else
+            return String.Empty;
     }
 }
