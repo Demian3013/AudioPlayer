@@ -99,10 +99,19 @@ public static class FolderTreeManager
             throw new DirectoryNotFoundException($"Указанная директория не существует: {dirPath}");
         }
 
-        var subDirectories = Directory.GetDirectories(dirPath);
+        var subDirectories = Array.Empty<string>();
+        try
+        {
+            subDirectories = Directory.GetDirectories(dirPath);
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            Debug.WriteLine("UnauthorizedAccessException: " + e.Message);
+        }
+
         if (subDirectories.Length == 0)
         {
-            return Directory.EnumerateFiles(dirPath).Where(file => regex.IsMatch(file));
+            return GetFilesWithRegex(dirPath, regex);        
         }
 
         IEnumerable<string> subDirsFiles = [];
@@ -115,7 +124,7 @@ public static class FolderTreeManager
             }
         }
 
-        var currentFolderFiles = Directory.EnumerateFiles(dirPath).Where(file => regex.IsMatch(file));
+        var currentFolderFiles = GetFilesWithRegex(dirPath, regex);
         
         foreach (var currentFolderFile in currentFolderFiles)
         {
@@ -123,5 +132,19 @@ public static class FolderTreeManager
         }
         
         return subDirsFiles;
+    }
+    private static IEnumerable<string> GetFilesWithRegex (string dirPath, Regex regex) 
+    {
+        var DirectoryEnumerateFiles = Enumerable.Empty<string>();
+        try
+        {
+            DirectoryEnumerateFiles = Directory.EnumerateFiles(dirPath).Where(file => regex.IsMatch(file));
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            Debug.WriteLine("UnauthorizedAccessException: " + e.Message);
+        }
+
+        return DirectoryEnumerateFiles;
     }
 }
