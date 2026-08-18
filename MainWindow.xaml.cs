@@ -12,6 +12,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using TagLib;
+using Path = System.IO.Path;
 
 namespace AudioPlayer;
 
@@ -20,7 +21,7 @@ public partial class MainWindow
     private enum PlaybackMode
     {
         DontRepeat,  
-        RepeatOne,
+        RepeatSelected,
         RepeatAll,
         Random
     }
@@ -35,7 +36,7 @@ public partial class MainWindow
     private bool _isDragging;
     private TimeSpan _totalDuration;
     private AudioFileInfo? _currentTrack;
-    private PlaybackMode _currentMode = PlaybackMode.DontRepeat;
+    private PlaybackMode _currentMode;
 
     public ObservableCollection<AudioFileInfo> AudioFiles { get; } = [];
     private MediaPlayer Player { get; } = new();
@@ -99,59 +100,150 @@ public partial class MainWindow
         thumb.DragCompleted += Thumb_DragCompleted;
     }
 
-    private void FoldersTreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    private CancellationTokenSource? _cancellationTokenSource;
+    private int _loadVersion;
+    private async void FoldersTreeView_OnSelectedItemChanged(
+        object sender,
+        RoutedPropertyChangedEventArgs<object> e)
     {
-        if (FoldersTreeView.SelectedItem is not TreeViewItem item) return;
-        if (item.Tag is not string path) return;
+        if (FoldersTreeView.SelectedItem is not TreeViewItem item)
+            return;
 
-        Debug.WriteLine("Вы выбрали папку: " + path);
+        if (item.Tag is not string path)
+            return;
+
+        // Отменяем предыдущую загрузку
+        _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+
+        var cts = new CancellationTokenSource();
+        _cancellationTokenSource = cts;
+
+        var token = cts.Token;
+        var loadVersion = ++_loadVersion;
+
+        Debug.WriteLine($"Вы выбрали папку: {path}");
 
         AudioFiles.Clear();
-        IEnumerable<string> files = [];
-        
+
         try
         {
-            files = FolderTreeManager.GetFilesRecursive(path, SoundFileRegex);
+            // Поиск файлов выполняем в background-потоке,
+            // поскольку Directory.* — синхронный API.
+            var files = await Task.Run(
+                () => FolderTreeManager.GetFilesRecursive(
+                    path,
+                    SoundFileRegex,
+                    token),
+                token);
+
+            token.ThrowIfCancellationRequested();
+
+            // Читаем metadata также не в UI-потоке.
+            var audioFiles = await Task.Run(
+                () => ReadAudioMetadata(files.ToList(), token),
+                token);
+
+            token.ThrowIfCancellationRequested();
+
+            // Защита от устаревшей операции.
+            if (loadVersion != _loadVersion)
+                return;
+
+            // После await мы снова на UI thread.
+            foreach (var audioFile in audioFiles)
+            {
+                token.ThrowIfCancellationRequested();
+
+                AudioFiles.Add(audioFile);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Нормальная ситуация:
+            // пользователь выбрал другую папку.
         }
         catch (UnauthorizedAccessException ex)
         {
-            Debug.WriteLine("UnauthorizedAccessException: " + ex.Message);
+            Debug.WriteLine(
+                $"Нет доступа к папке {path}: {ex.Message}");
         }
-
-        var fileList = files.ToList(); 
-        for (int i = 0; i < fileList.Count; i++)
+        catch (DirectoryNotFoundException ex)
         {
-            var file = fileList[i];
+            Debug.WriteLine(
+                $"Папка не найдена {path}: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(
+                $"Ошибка загрузки папки {path}: {ex}");
+        }
+    }
+    
+    private static List<AudioFileInfo> ReadAudioMetadata(
+        IReadOnlyList<string> files,
+        CancellationToken cancellationToken)
+    {
+        var result = new List<AudioFileInfo>(files.Count);
+
+        for (var i = 0; i < files.Count; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var file = files[i];
+
             try
             {
                 using var tagFile = TagLib.File.Create(file);
 
-                var info = new AudioFileInfo
+                var title = tagFile.Tag.Title;
+                var artist = tagFile.Tag.FirstPerformer;
+                var album = tagFile.Tag.Album;
+                var duration = tagFile.Properties.Duration;
+
+                result.Add(new AudioFileInfo
                 {
-                    Index = (i + 1).ToString() + ".",
+                    Index = $"{i + 1}.",
                     FilePath = file,
-                    Name = string.IsNullOrEmpty(tagFile.Tag.Title)
-                           ? System.IO.Path.GetFileNameWithoutExtension(file)
-                           : tagFile.Tag.Title,
-                    Artist = string.IsNullOrEmpty(tagFile.Tag.FirstPerformer)
-                             ? "Неизвестен"
-                             : tagFile.Tag.FirstPerformer,
-                    Album = string.IsNullOrEmpty(tagFile.Tag.Album)
-                            ? "Неизвестен"
-                            : tagFile.Tag.Album,
-                    Duration = tagFile.Properties.Duration.ToString(@"mm\:ss")
-                };
-                AudioFiles.Add(info);
+
+                    Name = string.IsNullOrEmpty(title)
+                        ? Path.GetFileNameWithoutExtension(file)
+                        : title,
+
+                    Artist = string.IsNullOrEmpty(artist)
+                        ? "Неизвестен"
+                        : artist,
+
+                    Album = string.IsNullOrEmpty(album)
+                        ? "Неизвестен"
+                        : album,
+
+                    Duration = duration.ToString(@"mm\:ss")
+                });
             }
             catch (UnauthorizedAccessException ex)
             {
-                Debug.WriteLine($"Ошибка чтения {file}: {ex.Message}");
+                Debug.WriteLine(
+                    $"Нет доступа к файлу {file}: {ex.Message}");
             }
             catch (ArgumentOutOfRangeException ex)
             {
-                Debug.WriteLine($"Ошибка чтения {file}: {ex.Message}");
+                Debug.WriteLine(
+                    $"Ошибка чтения файла {file}: {ex.Message}");
+            }
+            catch (TagLib.CorruptFileException ex)
+            {
+                Debug.WriteLine(
+                    $"Повреждённый файл {file}: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    $"Ошибка обработки {file}: {ex.Message}");
             }
         }
+
+        return result;
     }
     
     private void TrackDataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -322,6 +414,10 @@ public partial class MainWindow
             case PlaybackMode.Random:
                 PlayRandomTrack();
                 return;
+            case PlaybackMode.RepeatSelected:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
         if (!Player.HasAudio)
@@ -421,7 +517,7 @@ public partial class MainWindow
             case PlaybackMode.DontRepeat:
                 StopTrack();
                 break;
-            case PlaybackMode.RepeatOne:
+            case PlaybackMode.RepeatSelected:
                 StopTrack();               
                 PlayTrack();               
                 break;
