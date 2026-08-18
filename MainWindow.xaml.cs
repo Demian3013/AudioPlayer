@@ -118,14 +118,17 @@ public partial class MainWindow
             Debug.WriteLine("UnauthorizedAccessException: " + ex.Message);
         }
 
-        foreach (var file in files)
+        var fileList = files.ToList(); 
+        for (int i = 0; i < fileList.Count; i++)
         {
+            var file = fileList[i];
             try
             {
                 using var tagFile = TagLib.File.Create(file);
 
                 var info = new AudioFileInfo
                 {
+                    Index = (i + 1).ToString() + ".",
                     FilePath = file,
                     Name = string.IsNullOrEmpty(tagFile.Tag.Title)
                            ? System.IO.Path.GetFileNameWithoutExtension(file)
@@ -146,7 +149,7 @@ public partial class MainWindow
             }
             catch (ArgumentOutOfRangeException ex)
             {
-                Debug.WriteLine($"Ошибка чтения {file}: {ex.Message}"); 
+                Debug.WriteLine($"Ошибка чтения {file}: {ex.Message}");
             }
         }
     }

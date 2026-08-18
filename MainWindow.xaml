@@ -293,6 +293,7 @@
                   Cursor="Hand"
                   Margin="0,0,0,15">
                     <DataGrid.Columns>
+                        <DataGridTextColumn Header=""  Binding="{Binding Index}" Width="Auto"/>
                         <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
                         <DataGridTextColumn Header="Исполнитель" Binding="{Binding Artist}" Width="*"/>
                         <DataGridTextColumn Header="Альбом" Binding="{Binding Album}" Width="*"/>
