@@ -13,7 +13,7 @@ using System.Windows.Shapes;
 using System.Windows.Threading;
 using TagLib;
 using Path = System.IO.Path;
-
+using WpfAnimatedGif;
 namespace AudioPlayer;
 
 public partial class MainWindow
@@ -72,6 +72,10 @@ public partial class MainWindow
         Player.Volume = VolumeSlider.Value;
 
         _currentMode = GetSliderPlaybackMode();
+
+        var gifUri = new Uri("loading.gif", UriKind.Relative);
+        var bitmap = new BitmapImage(gifUri);
+        ImageBehavior.SetAnimatedSource(LoadingGif, bitmap);
     }
 
     private PlaybackMode GetSliderPlaybackMode()
@@ -106,6 +110,7 @@ public partial class MainWindow
         object sender,
         RoutedPropertyChangedEventArgs<object> e)
     {
+        LoadingOverlay.Visibility = Visibility.Visible;
         if (FoldersTreeView.SelectedItem is not TreeViewItem item)
             return;
 
@@ -178,6 +183,7 @@ public partial class MainWindow
             Debug.WriteLine(
                 $"Ошибка загрузки папки {path}: {ex}");
         }
+        LoadingOverlay.Visibility = Visibility.Collapsed; 
     }
     
     private static List<AudioFileInfo> ReadAudioMetadata(

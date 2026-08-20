@@ -19,6 +19,7 @@
     <None Remove="Image\volume.png" />
     <Resource Include="Image\downloads.png" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
+    <PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
     <Resource Include="Image\drive.png" />
     <Resource Include="Image\forward.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -38,6 +39,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>
     <None Remove="Image\track_placeholder.png" />
+    <Resource Include="loading.gif" />
     <Resource Include="Image\track_placeholder.png" />
   </ItemGroup>
 

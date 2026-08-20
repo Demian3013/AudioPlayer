@@ -300,6 +300,17 @@
                         <DataGridTextColumn Header="Длительность" Binding="{Binding Duration}" Width="Auto"/>
                     </DataGrid.Columns>
                 </DataGrid>
+                <Grid 
+                    x:Name="LoadingOverlay" 
+                    Background="Transparent" 
+                    Visibility="Collapsed">
+                    <Image 
+                        x:Name="LoadingGif"
+                        Width="150" Height="150"
+                        Stretch="Uniform"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"/>
+                </Grid>
             </Grid>
         </Border>
 
