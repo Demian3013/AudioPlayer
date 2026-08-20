@@ -11,6 +11,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using AudioPlayer.Structs;
+using AudioPlayer.Tools;
 using TagLib;
 using Path = System.IO.Path;
 using WpfAnimatedGif;
@@ -41,7 +43,8 @@ public partial class MainWindow
     public ObservableCollection<AudioFileInfo> AudioFiles { get; } = [];
     private MediaPlayer Player { get; } = new();
     private readonly DispatcherTimer? _trackProgressTimer;
-
+    private readonly PlaylistService _playlistService = new();
+    
     private readonly BitmapImage _stopTrackBitmapImage = new(new Uri(TrackStopImgPath, UriKind.Relative));
     private readonly BitmapImage _playTrackBitmapImage = new(new Uri(TrackPlayImgPath, UriKind.Relative));
     private readonly BitmapImage _trackPlaceholderBitmapImage = new(new Uri(TrackPlaceholderImgPath, UriKind.Relative));
@@ -76,6 +79,12 @@ public partial class MainWindow
         var gifUri = new Uri("loading.gif", UriKind.Relative);
         var bitmap = new BitmapImage(gifUri);
         ImageBehavior.SetAnimatedSource(LoadingGif, bitmap);
+    }
+
+    protected override async void OnInitialized(EventArgs e)
+    {
+        base.OnInitialized(e);
+        await _playlistService.LoadAsync();
     }
 
     private PlaybackMode GetSliderPlaybackMode()

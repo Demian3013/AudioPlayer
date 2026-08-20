@@ -15,10 +15,11 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition/>
+            <RowDefinition/>
         </Grid.RowDefinitions>
         
-        <Border 
+        <Border
             Grid.Row="0" 
             Grid.Column="0" 
             Grid.ColumnSpan="2"
@@ -264,9 +265,16 @@
                     SelectedItemChanged="FoldersTreeView_OnSelectedItemChanged"/>
             </Grid>
         </Border>
+        
+        <Border 
+            Grid.Row="2" 
+            Grid.Column="0" 
+            Style="{StaticResource GlassPanelStyle}">
+        </Border>
 
-        <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
-        Style="{StaticResource GlassPanelStyle}">
+        <Border 
+            Grid.Row="1" Grid.RowSpan="2" Grid.Column="1" Grid.ColumnSpan="2"
+            Style="{StaticResource GlassPanelStyle}">
             <Grid x:Name="TrackListGrid">
                 <Grid.OpacityMask>
                     <VisualBrush Stretch="Fill">

@@ -1,6 +1,6 @@
-namespace AudioPlayer;
+namespace AudioPlayer.Structs;
 
-public struct AudioFileInfo
+public record struct AudioFileInfo
 {
     public string Index {  get; set; }
     public string FilePath { get; set; }

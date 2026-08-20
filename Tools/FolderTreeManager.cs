@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
-namespace AudioPlayer;
+namespace AudioPlayer.Tools;
 
 public static class FolderTreeManager
 {
