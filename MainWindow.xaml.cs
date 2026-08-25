@@ -16,36 +16,38 @@ using AudioPlayer.Tools;
 using TagLib;
 using Path = System.IO.Path;
 using WpfAnimatedGif;
+
 namespace AudioPlayer;
 
 public partial class MainWindow
 {
     private enum PlaybackMode
     {
-        DontRepeat,  
+        DontRepeat,
         RepeatSelected,
         RepeatAll,
         Random
     }
+
+    public ObservableCollection<AudioFileInfo> AudioFiles { get; } = [];
 
     private const string TrackPlaceholderImgPath = "Image/track_placeholder.png";
     private const string TrackStopImgPath = "Image/stop.png";
     private const string TrackPlayImgPath = "Image/play.png";
     private const string ProgressSliderTemplateName = "PART_Track";
     private const double TrackProgressTimerTickFreq = 0.15;
-    private double SpeedTrack = 1;
-
+    
     private bool _isTrackPlaying;
     private bool _isDragging;
+    private double _trackSpeed = 1;
     private TimeSpan _totalDuration;
     private AudioFileInfo? _currentTrack;
     private PlaybackMode _currentMode;
 
-    public ObservableCollection<AudioFileInfo> AudioFiles { get; } = [];
-    private MediaPlayer Player { get; } = new();
+    private readonly MediaPlayer _player = new();
     private readonly DispatcherTimer? _trackProgressTimer;
     private readonly PlaylistService _playlistService = new();
-    
+
     private readonly BitmapImage _stopTrackBitmapImage = new(new Uri(TrackStopImgPath, UriKind.Relative));
     private readonly BitmapImage _playTrackBitmapImage = new(new Uri(TrackPlayImgPath, UriKind.Relative));
     private readonly BitmapImage _trackPlaceholderBitmapImage = new(new Uri(TrackPlaceholderImgPath, UriKind.Relative));
@@ -55,7 +57,7 @@ public partial class MainWindow
     #region SoundFileRegex
 
     [GeneratedRegex(@"^.*\.(mp3|wav|wma|asf|avi)$", RegexOptions.IgnoreCase | RegexOptions.Compiled,
-            "en-US")]
+        "en-US")]
     private static partial Regex MyRegex();
 
     #endregion
@@ -67,13 +69,13 @@ public partial class MainWindow
         FolderTreeManager.BuildTree(FoldersTreeView);
         DataContext = this;
         Loaded += InitializeSliderThumb;
-
+        
         _trackProgressTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromSeconds(TrackProgressTimerTickFreq)
         };
 
-        Player.Volume = VolumeSlider.Value;
+        _player.Volume = VolumeSlider.Value;
 
         _currentMode = GetSliderPlaybackMode();
 
@@ -91,12 +93,13 @@ public partial class MainWindow
     private PlaybackMode GetSliderPlaybackMode()
     {
         var playbackModes = Enum.GetValues<PlaybackMode>();
-        
+
         if (TrackEndModeSlider.Value >= playbackModes.Length)
         {
-            throw new InvalidEnumArgumentException("Нет соответствующего этому индексу значения в PlaybackMode перечислении");
+            throw new InvalidEnumArgumentException(
+                "Нет соответствующего этому индексу значения в PlaybackMode перечислении");
         }
-        
+
         return (PlaybackMode)TrackEndModeSlider.Value;
     }
 
@@ -116,6 +119,7 @@ public partial class MainWindow
 
     private CancellationTokenSource? _cancellationTokenSource;
     private int _loadVersion;
+
     private async void FoldersTreeView_OnSelectedItemChanged(
         object sender,
         RoutedPropertyChangedEventArgs<object> e)
@@ -193,75 +197,58 @@ public partial class MainWindow
             Debug.WriteLine(
                 $"Ошибка загрузки папки {path}: {ex}");
         }
-        LoadingOverlay.Visibility = Visibility.Collapsed; 
+
+        LoadingOverlay.Visibility = Visibility.Collapsed;
     }
-    
+
     private static List<AudioFileInfo> ReadAudioMetadata(
         IReadOnlyList<string> files,
         CancellationToken cancellationToken)
     {
         var result = new List<AudioFileInfo>(files.Count);
 
-        for (var i = 0; i < files.Count; i++)
+        for (var index = 0; index < files.Count; index++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var file = files[i];
+            var filePath = files[index];
 
             try
             {
-                using var tagFile = TagLib.File.Create(file);
+                using var tagFile = TagLib.File.Create(filePath);
 
                 var title = tagFile.Tag.Title;
                 var artist = tagFile.Tag.FirstPerformer;
                 var album = tagFile.Tag.Album;
                 var duration = tagFile.Properties.Duration;
 
-                result.Add(new AudioFileInfo
-                {
-                    Index = $"{i + 1}.",
-                    FilePath = file,
-
-                    Name = string.IsNullOrEmpty(title)
-                        ? Path.GetFileNameWithoutExtension(file)
-                        : title,
-
-                    Artist = string.IsNullOrEmpty(artist)
-                        ? "Неизвестен"
-                        : artist,
-
-                    Album = string.IsNullOrEmpty(album)
-                        ? "Неизвестен"
-                        : album,
-
-                    Duration = duration.ToString(@"mm\:ss")
-                });
+                result.Add(new AudioFileInfo(index, filePath, title, artist, album, duration));
             }
             catch (UnauthorizedAccessException ex)
             {
                 Debug.WriteLine(
-                    $"Нет доступа к файлу {file}: {ex.Message}");
+                    $"Нет доступа к файлу {filePath}: {ex.Message}");
             }
             catch (ArgumentOutOfRangeException ex)
             {
                 Debug.WriteLine(
-                    $"Ошибка чтения файла {file}: {ex.Message}");
+                    $"Ошибка чтения файла {filePath}: {ex.Message}");
             }
-            catch (TagLib.CorruptFileException ex)
+            catch (CorruptFileException ex)
             {
                 Debug.WriteLine(
-                    $"Повреждённый файл {file}: {ex.Message}");
+                    $"Повреждённый файл {filePath}: {ex.Message}");
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(
-                    $"Ошибка обработки {file}: {ex.Message}");
+                    $"Ошибка обработки {filePath}: {ex.Message}");
             }
         }
 
         return result;
     }
-    
+
     private void TrackDataGrid_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         Debug.WriteLineIf(TrackDataGrid.SelectedItem is not AudioFileInfo,
@@ -294,7 +281,7 @@ public partial class MainWindow
             TrackImage.Source = _trackPlaceholderBitmapImage;
         }
 
-        TrackNameTextBlock.Text = _currentTrack.Value.Name;
+        TrackNameTextBlock.Text = _currentTrack.Value.Title;
 
         TrackArtistTextBlock.Text = string.IsNullOrEmpty(tagFile.Tag.FirstPerformer)
             ? "Неизвестен"
@@ -318,14 +305,14 @@ public partial class MainWindow
 
         StopTrack();
 
-        Player.Close();
-        Player.Open(selectedTrackUri);
+        _player.Close();
+        _player.Open(selectedTrackUri);
 
-        Player.MediaOpened -= OnMediaOpened;
-        Player.MediaOpened += OnMediaOpened;
+        _player.MediaOpened -= OnMediaOpened;
+        _player.MediaOpened += OnMediaOpened;
 
-        Player.MediaEnded -= OnMediaEnded;
-        Player.MediaEnded += OnMediaEnded;
+        _player.MediaEnded -= OnMediaEnded;
+        _player.MediaEnded += OnMediaEnded;
     }
 
     private static BitmapImage? GetBitmapImageFromPicture(IPicture p)
@@ -346,14 +333,14 @@ public partial class MainWindow
         {
             Debug.WriteLine("NotSupportedException: " + ex.Message);
             return null;
-        }       
+        }
     }
 
     private void OnMediaOpened(object? sender, EventArgs e)
     {
-        _totalDuration = Player.NaturalDuration.TimeSpan;
-        Player.Volume = VolumeSlider.Value;
-        Player.SpeedRatio = SpeedTrack;
+        _totalDuration = _player.NaturalDuration.TimeSpan;
+        _player.Volume = VolumeSlider.Value;
+        _player.SpeedRatio = _trackSpeed;
         PlayTrack();
     }
 
@@ -361,14 +348,14 @@ public partial class MainWindow
     {
         PlayPauseImage.Source = _stopTrackBitmapImage;
         StartTrackProgressTimer();
-        Player.Play();
+        _player.Play();
         _isTrackPlaying = true;
     }
 
     private void PauseTrack()
     {
         PlayPauseImage.Source = _playTrackBitmapImage;
-        Player.Pause();
+        _player.Pause();
         StopTrackProgressTimer();
         _isTrackPlaying = false;
     }
@@ -376,7 +363,7 @@ public partial class MainWindow
     private void StopTrack()
     {
         PlayPauseImage.Source = _playTrackBitmapImage;
-        Player.Stop();
+        _player.Stop();
         StopTrackProgressTimer();
         ProgressSlider.Value = 0;
         _isTrackPlaying = false;
@@ -393,9 +380,9 @@ public partial class MainWindow
 
     private void TrackProgressTimerTick(object? sender, EventArgs e)
     {
-        if (_isDragging || !Player.NaturalDuration.HasTimeSpan || !(_totalDuration.TotalSeconds > 0)) return;
+        if (_isDragging || !_player.NaturalDuration.HasTimeSpan || !(_totalDuration.TotalSeconds > 0)) return;
 
-        var current = Player.Position.TotalSeconds;
+        var current = _player.Position.TotalSeconds;
         var total = _totalDuration.TotalSeconds;
         ProgressSlider.Value = current / total;
     }
@@ -418,12 +405,14 @@ public partial class MainWindow
             PauseTrack();
             return;
         }
-        
+
         switch (_currentMode)
         {
             case PlaybackMode.DontRepeat when IsTrackEnded():
                 StopTrack();
                 PlayTrack();
+                return;
+            case PlaybackMode.DontRepeat when !IsTrackEnded():
                 return;
             case PlaybackMode.RepeatAll:
                 SetCurrentTrack(AudioFiles[0]);
@@ -434,30 +423,28 @@ public partial class MainWindow
                 return;
             case PlaybackMode.RepeatSelected:
                 break;
-            case PlaybackMode.DontRepeat when !IsTrackEnded():
-                return;
             default:
                 throw new ArgumentOutOfRangeException();
         }
 
-        if (!Player.HasAudio)
+        if (!_player.HasAudio)
         {
             MessageBox.Show("Не выбран трек или выбран медиафайл без аудио!", "Ошибка!",
                 MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-            
+
         PlayTrack();
     }
 
     private bool IsTrackEnded()
     {
-        return _currentTrack != null && Player.Position == _totalDuration;
+        return _currentTrack != null && _player.Position == _totalDuration;
     }
 
     private void RewindButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!Player.HasAudio) return;
+        if (!_player.HasAudio) return;
 
         PlayPreviousTrack();
     }
@@ -471,7 +458,7 @@ public partial class MainWindow
             PlayRandomTrack();
             return;
         }
-        
+
         PlayNextTrack();
     }
 
@@ -483,15 +470,15 @@ public partial class MainWindow
     private void Thumb_DragCompleted(object sender, DragCompletedEventArgs e)
     {
         _isDragging = false;
-        if (!Player.NaturalDuration.HasTimeSpan) return;
+        if (!_player.NaturalDuration.HasTimeSpan) return;
 
         var newPositionSeconds = _totalDuration.TotalSeconds * ProgressSlider.Value;
-        Player.Position = TimeSpan.FromSeconds(newPositionSeconds);
+        _player.Position = TimeSpan.FromSeconds(newPositionSeconds);
     }
 
     private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        Player.Volume = e.NewValue;
+        _player.Volume = e.NewValue;
     }
 
     private void SpeedButton_Click(object sender, RoutedEventArgs e)
@@ -505,8 +492,8 @@ public partial class MainWindow
         Debug.WriteLineIf(condition, "ERROR: !double.TryParse(content, ...)");
         if (condition) return;
 
-        Player.SpeedRatio = speed;
-        SpeedTrack = speed;
+        _player.SpeedRatio = speed;
+        _trackSpeed = speed;
     }
 
     private void ProgressSlider_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -518,9 +505,9 @@ public partial class MainWindow
         var fraction = Math.Clamp(e.GetPosition(slider).X / slider.ActualWidth, 0, 1);
         slider.Value = fraction;
 
-        if (!Player.HasAudio) return;
+        if (!_player.HasAudio) return;
 
-        Player.Position = TimeSpan.FromSeconds(_totalDuration.TotalSeconds * fraction);
+        _player.Position = TimeSpan.FromSeconds(_totalDuration.TotalSeconds * fraction);
 
         e.Handled = true;
     }
@@ -533,18 +520,25 @@ public partial class MainWindow
                 StopTrack();
                 break;
             case PlaybackMode.RepeatSelected:
-                StopTrack();               
-                PlayTrack();               
+                StopTrack();
+                PlayTrack();
                 break;
             case PlaybackMode.RepeatAll:
                 PlayNextTrack();
                 break;
             case PlaybackMode.Random:
-                PlayRandomTrack();         
+                PlayRandomTrack();
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
+
+        if (_currentTrack == null) return;
+
+        var curTrackIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
+        if (curTrackIndex == -1) return;
+        
+        (AudioFileInfo)AudioFiles[curTrackIndex].IsListened = true;
     }
 
     private void PlayNextTrack()
@@ -552,16 +546,8 @@ public partial class MainWindow
         if (_currentTrack is null) return;
         var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
 
-        if (currentIndex < 0) return;
-        
-        var nextIndex = currentIndex + 1;
-        if (nextIndex >= AudioFiles.Count)
-        {
-            MessageBox.Show("Все треки воспроизведены!","", MessageBoxButton.OK);
-            return;
-        }
-
-        var nextTrack = AudioFiles[nextIndex];
+        if (currentIndex == 0 || currentIndex == AudioFiles.Count - 1) return;
+        var nextTrack = AudioFiles[currentIndex + 1];
 
         SetCurrentTrack(nextTrack);
         TrackDataGrid.SelectedItem = nextTrack;
@@ -572,27 +558,20 @@ public partial class MainWindow
         if (_currentTrack is null) return;
         var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
 
-        if (currentIndex < 0) return;
+        if (currentIndex is 0 or -1) return;
+        var previousTrack = AudioFiles[currentIndex - 1];
 
-        var previosIndex = currentIndex - 1;
-        if (previosIndex < 0)
-        { 
-            return;
-        }
-
-        var previoseTrack = AudioFiles[previosIndex];
-
-        SetCurrentTrack(previoseTrack);
-        TrackDataGrid.SelectedItem = previoseTrack;
+        SetCurrentTrack(previousTrack);
+        TrackDataGrid.SelectedItem = previousTrack;
     }
 
     private void PlayRandomTrack()
     {
         if (AudioFiles.Count == 0) return;
-        
+
         var rand = new Random();
         var randomIndex = rand.Next(AudioFiles.Count);
-        
+
         if (AudioFiles.Count > 1 && _currentTrack != null)
         {
             var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
@@ -609,7 +588,6 @@ public partial class MainWindow
 
     private void TrackEndModeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-
     }
 
     private void InvisibleSliderButton_Click(object sender, RoutedEventArgs e)
@@ -631,16 +609,13 @@ public partial class MainWindow
 
     private void AddButton_Click(object sender, RoutedEventArgs e)
     {
-
     }
 
     private void EditButton_Click(object sender, RoutedEventArgs e)
     {
-
     }
 
     private void RemoveButton_Click(object sender, RoutedEventArgs e)
     {
-
     }
 }

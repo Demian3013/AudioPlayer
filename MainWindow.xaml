@@ -352,7 +352,7 @@
                   Margin="0,0,0,15">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header=""  Binding="{Binding Index}" Width="Auto"/>
-                        <DataGridTextColumn Header="Название" Binding="{Binding Name}" Width="*"/>
+                        <DataGridTextColumn Header="Название" Binding="{Binding Title}" Width="*"/>
                         <DataGridTextColumn Header="Исполнитель" Binding="{Binding Artist}" Width="*"/>
                         <DataGridTextColumn Header="Альбом" Binding="{Binding Album}" Width="*"/>
                         <DataGridTextColumn Header="Длительность" Binding="{Binding Duration}" Width="Auto"/>
