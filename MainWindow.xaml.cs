@@ -27,12 +27,13 @@ public partial class MainWindow
         RepeatAll,
         Random
     }
-    
+
     private const string TrackPlaceholderImgPath = "Image/track_placeholder.png";
     private const string TrackStopImgPath = "Image/stop.png";
     private const string TrackPlayImgPath = "Image/play.png";
     private const string ProgressSliderTemplateName = "PART_Track";
     private const double TrackProgressTimerTickFreq = 0.15;
+    private double SpeedTrack = 1;
 
     private bool _isTrackPlaying;
     private bool _isDragging;
@@ -351,6 +352,8 @@ public partial class MainWindow
     private void OnMediaOpened(object? sender, EventArgs e)
     {
         _totalDuration = Player.NaturalDuration.TimeSpan;
+        Player.Volume = VolumeSlider.Value;
+        Player.SpeedRatio = SpeedTrack;
         PlayTrack();
     }
 
@@ -431,6 +434,8 @@ public partial class MainWindow
                 return;
             case PlaybackMode.RepeatSelected:
                 break;
+            case PlaybackMode.DontRepeat when !IsTrackEnded():
+                return;
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -454,13 +459,7 @@ public partial class MainWindow
     {
         if (!Player.HasAudio) return;
 
-        Player.Stop();
-        ProgressSlider.Value = 0;
-
-        if (_isTrackPlaying)
-        {
-            Player.Play();
-        }
+        PlayPreviousTrack();
     }
 
     private void ForwardButton_Click(object sender, RoutedEventArgs e)
@@ -507,6 +506,7 @@ public partial class MainWindow
         if (condition) return;
 
         Player.SpeedRatio = speed;
+        SpeedTrack = speed;
     }
 
     private void ProgressSlider_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -565,6 +565,25 @@ public partial class MainWindow
 
         SetCurrentTrack(nextTrack);
         TrackDataGrid.SelectedItem = nextTrack;
+    }
+
+    private void PlayPreviousTrack()
+    {
+        if (_currentTrack is null) return;
+        var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
+
+        if (currentIndex < 0) return;
+
+        var previosIndex = currentIndex - 1;
+        if (previosIndex < 0)
+        { 
+            return;
+        }
+
+        var previoseTrack = AudioFiles[previosIndex];
+
+        SetCurrentTrack(previoseTrack);
+        TrackDataGrid.SelectedItem = previoseTrack;
     }
 
     private void PlayRandomTrack()

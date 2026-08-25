@@ -185,7 +185,7 @@
                                 Maximum="1" 
                                 Value="0.5"
                                 Width="100" 
-                                VerticalAlignment="Center"
+                                LargeChange="0.1"                               VerticalAlignment="Center"
                                 ValueChanged="VolumeSlider_ValueChanged"
                                 Cursor="Hand"
                                 Margin="10"/>
