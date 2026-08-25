@@ -270,6 +270,56 @@
             Grid.Row="2" 
             Grid.Column="0" 
             Style="{StaticResource GlassPanelStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height = "Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel 
+                    Grid.Row="0" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Margin="0,5,0,10">
+                    <Button 
+                        x:Name="AddButton" 
+                        Margin="0,0,15,0" 
+                        Click="AddButton_Click"
+                        Background="Transparent" 
+                        BorderThickness="0"
+                        Cursor="Hand">
+                        <Image 
+                            Source="/Image/add.png" 
+                            Width="28" Height="28"/>
+                    </Button>
+
+                    <Button 
+                        x:Name="EditButton" 
+                        Margin="2" 
+                        Click="EditButton_Click"
+                        Background="Transparent" 
+                        BorderThickness="0" 
+                        Cursor="Hand">
+                        <Image 
+                            Source="/Image/edit.png" 
+                            Width="28" Height="28"/>    
+                    </Button>
+
+                    <Button 
+                    x:Name="RemoveButton"
+                    Margin="15,0,0,0" 
+                    Click="RemoveButton_Click"
+                    Background="Transparent" 
+                    BorderThickness="0"
+                    Cursor="Hand">
+                        <Image 
+                            Source="/Image/remove.png"
+                            Width="28" Height="28"/>
+                    </Button>
+                </StackPanel>
+                <ListBox
+                    Grid.Row="1">
+                </ListBox>
+            </Grid>
         </Border>
 
         <Border 
@@ -306,6 +356,7 @@
                         <DataGridTextColumn Header="Исполнитель" Binding="{Binding Artist}" Width="*"/>
                         <DataGridTextColumn Header="Альбом" Binding="{Binding Album}" Width="*"/>
                         <DataGridTextColumn Header="Длительность" Binding="{Binding Duration}" Width="Auto"/>
+                        <DataGridTextColumn Header="" Width="Auto"/>
                     </DataGrid.Columns>
                 </DataGrid>
                 <Grid 

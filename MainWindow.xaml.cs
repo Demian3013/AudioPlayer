@@ -628,4 +628,19 @@ public partial class MainWindow
             _ => TrackEndModeLabel.Content
         };
     }
+
+    private void AddButton_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    private void EditButton_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    private void RemoveButton_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
 }
