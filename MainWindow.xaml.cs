@@ -342,6 +342,7 @@ public partial class MainWindow
         _player.Volume = VolumeSlider.Value;
         _player.SpeedRatio = _trackSpeed;
         PlayTrack();
+        SetTrackListened(_currentTrack);
     }
 
     private void PlayTrack()
@@ -455,15 +456,6 @@ public partial class MainWindow
 
         if (_currentMode == PlaybackMode.Random)
         {
-            if (_currentTrack == null) return;
-
-            var curTrackIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
-            if (curTrackIndex == -1) return;
-
-            var file = AudioFiles[curTrackIndex];
-            file.IsListened = true;
-            AudioFiles[curTrackIndex] = file;
-
             PlayRandomTrack();
             return;
         }
@@ -541,10 +533,13 @@ public partial class MainWindow
             default:
                 throw new ArgumentOutOfRangeException();
         }
+    }
 
-        if (_currentTrack == null) return;
+    private void SetTrackListened(AudioFileInfo? track)
+    {
+        if (track == null) return;
 
-        var curTrackIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
+        var curTrackIndex = AudioFiles.IndexOf((AudioFileInfo)track);
         if (curTrackIndex == -1) return;
 
         var file = AudioFiles[curTrackIndex];
@@ -578,7 +573,15 @@ public partial class MainWindow
 
     private void PlayRandomTrack()
     {
-        if (AudioFiles.Count is 0 or 1 || AllTrackIsListened()) return;
+        if (AudioFiles.Count is 0 or 1) return;
+
+        if (HasListenedToAllTracks())
+        {
+            for (var i = 0; i < AudioFiles.Count; i++)
+            {
+                AudioFiles[i] = AudioFiles[i] with { IsListened = false };
+            }
+        }
 
         var rand = new Random();
         var randomIndex = rand.Next(AudioFiles.Count);
@@ -597,17 +600,14 @@ public partial class MainWindow
         TrackDataGrid.SelectedItem = randomTrack;
     }
 
-    private bool AllTrackIsListened()
+    private bool HasListenedToAllTracks()
     {
-        foreach (var file in AudioFiles)
-        {
-            if (file.IsListened == false) return false;
-        }
-        return true;
+        return AudioFiles.All(file => file.IsListened);
     }
 
     private void TrackEndModeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        
     }
 
     private void InvisibleSliderButton_Click(object sender, RoutedEventArgs e)
