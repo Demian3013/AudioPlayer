@@ -605,11 +605,6 @@ public partial class MainWindow
         return AudioFiles.All(file => file.IsListened);
     }
 
-    private void TrackEndModeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        
-    }
-
     private void InvisibleSliderButton_Click(object sender, RoutedEventArgs e)
     {
         var current = (int)TrackEndModeSlider.Value;
@@ -627,15 +622,16 @@ public partial class MainWindow
         };
     }
 
-    private void AddButton_Click(object sender, RoutedEventArgs e)
+    private void PlaylistAddButton_Click(object sender, RoutedEventArgs e)
+    {
+        
+    }
+
+    private void PlaylistEditButton_Click(object sender, RoutedEventArgs e)
     {
     }
 
-    private void EditButton_Click(object sender, RoutedEventArgs e)
-    {
-    }
-
-    private void RemoveButton_Click(object sender, RoutedEventArgs e)
+    private void PlaylistRemoveButton_Click(object sender, RoutedEventArgs e)
     {
     }
 }

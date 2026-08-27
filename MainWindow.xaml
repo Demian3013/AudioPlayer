@@ -209,7 +209,6 @@
                                     Value="0"
                                     Width="100" 
                                     HorizontalAlignment="Center"
-                                    ValueChanged="TrackEndModeSlider_ValueChanged"
                                     IsHitTestVisible="False"   
                                     Cursor="Hand"/>
 
@@ -281,9 +280,9 @@
                     HorizontalAlignment="Center" 
                     Margin="0,5,0,10">
                     <Button 
-                        x:Name="AddButton" 
+                        x:Name="PlaylistAddButton" 
                         Margin="0,0,15,0" 
-                        Click="AddButton_Click"
+                        Click="PlaylistAddButton_Click"
                         Background="Transparent" 
                         BorderThickness="0"
                         Cursor="Hand">
@@ -293,9 +292,9 @@
                     </Button>
 
                     <Button 
-                        x:Name="EditButton" 
+                        x:Name="PlaylistEditButton" 
                         Margin="2" 
-                        Click="EditButton_Click"
+                        Click="PlaylistEditButton_Click"
                         Background="Transparent" 
                         BorderThickness="0" 
                         Cursor="Hand">
@@ -305,9 +304,9 @@
                     </Button>
 
                     <Button 
-                    x:Name="RemoveButton"
+                    x:Name="PlaylistRemoveButton"
                     Margin="15,0,0,0" 
-                    Click="RemoveButton_Click"
+                    Click="PlaylistRemoveButton_Click"
                     Background="Transparent" 
                     BorderThickness="0"
                     Cursor="Hand">
