@@ -455,6 +455,15 @@ public partial class MainWindow
 
         if (_currentMode == PlaybackMode.Random)
         {
+            if (_currentTrack == null) return;
+
+            var curTrackIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
+            if (curTrackIndex == -1) return;
+
+            var file = AudioFiles[curTrackIndex];
+            file.IsListened = true;
+            AudioFiles[curTrackIndex] = file;
+
             PlayRandomTrack();
             return;
         }
@@ -537,8 +546,10 @@ public partial class MainWindow
 
         var curTrackIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
         if (curTrackIndex == -1) return;
-        
-        (AudioFileInfo)AudioFiles[curTrackIndex].IsListened = true;
+
+        var file = AudioFiles[curTrackIndex];
+        file.IsListened = true;
+        AudioFiles[curTrackIndex] = file;
     }
 
     private void PlayNextTrack()
@@ -567,15 +578,15 @@ public partial class MainWindow
 
     private void PlayRandomTrack()
     {
-        if (AudioFiles.Count == 0) return;
+        if (AudioFiles.Count is 0 or 1 || AllTrackIsListened()) return;
 
         var rand = new Random();
         var randomIndex = rand.Next(AudioFiles.Count);
 
         if (AudioFiles.Count > 1 && _currentTrack != null)
-        {
+        {   
             var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
-            while (randomIndex == currentIndex)
+            while (randomIndex == currentIndex || AudioFiles[randomIndex].IsListened == true)
             {
                 randomIndex = rand.Next(AudioFiles.Count);
             }
@@ -584,6 +595,15 @@ public partial class MainWindow
         var randomTrack = AudioFiles[randomIndex];
         SetCurrentTrack(randomTrack);
         TrackDataGrid.SelectedItem = randomTrack;
+    }
+
+    private bool AllTrackIsListened()
+    {
+        foreach (var file in AudioFiles)
+        {
+            if (file.IsListened == false) return false;
+        }
+        return true;
     }
 
     private void TrackEndModeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
