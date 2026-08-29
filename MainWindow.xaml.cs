@@ -14,9 +14,7 @@ using System.Windows.Threading;
 using AudioPlayer.Structs;
 using AudioPlayer.Tools;
 using TagLib;
-using Path = System.IO.Path;
 using WpfAnimatedGif;
-using AudioPlayer.Data;
 
 namespace AudioPlayer;
 
@@ -40,12 +38,12 @@ public partial class MainWindow
     
     private bool _isTrackPlaying;
     private bool _isDragging;
-    private bool _isAddPlaylist;
+    private bool _playlistCreateMode;
     private double _trackSpeed = 1;
     private TimeSpan _totalDuration;
     private AudioFileInfo? _currentTrack;
     private PlaybackMode _currentMode;
-    private List<string>? PlaylistCreatTrackPath;
+    private ObservableCollection<AudioFileInfo> _newPlaylistTrackCache = [];
 
     private readonly MediaPlayer _player = new();
     private readonly DispatcherTimer? _trackProgressTimer;
@@ -85,6 +83,8 @@ public partial class MainWindow
         var gifUri = new Uri("loading.gif", UriKind.Relative);
         var bitmap = new BitmapImage(gifUri);
         ImageBehavior.SetAnimatedSource(LoadingGif, bitmap);
+        
+        NewPlaylistTracksListBox.ItemsSource = _newPlaylistTrackCache;
     }
 
     protected override async void OnInitialized(EventArgs e)
@@ -259,19 +259,13 @@ public partial class MainWindow
 
         if (TrackDataGrid.SelectedItem is not AudioFileInfo selectedTrackInfo) return;
 
-        if (!_isAddPlaylist)
+        if (!_playlistCreateMode)
         {
             SetCurrentTrack(selectedTrackInfo);
             return;
         }
-
-        if(PlaylistCreatTrackPath == null)
-        {
-            PlaylistCreatTrackPath = new List<string>();
-        }
-
-        PlaylistCreatTrackPath.Add(selectedTrackInfo.FilePath);
-        PlaylistTrackCreate.Items.Add(selectedTrackInfo.Title);
+        
+        _newPlaylistTrackCache.Add(selectedTrackInfo);
     }
 
     private void SetCurrentTrack(AudioFileInfo trackInfo)
@@ -604,7 +598,7 @@ public partial class MainWindow
         if (AudioFiles.Count > 1 && _currentTrack != null)
         {   
             var currentIndex = AudioFiles.IndexOf((AudioFileInfo)_currentTrack);
-            while (randomIndex == currentIndex || AudioFiles[randomIndex].IsListened == true)
+            while (randomIndex == currentIndex || AudioFiles[randomIndex].IsListened)
             {
                 randomIndex = rand.Next(AudioFiles.Count);
             }
@@ -639,18 +633,20 @@ public partial class MainWindow
 
     private void PlaylistAddButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_isAddPlaylist)
+        if (_playlistCreateMode)
         {
             CreatePlaylistGrid.Visibility = Visibility.Collapsed;
             FoldersAccessGrid.Visibility = Visibility.Visible;
+            SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
+            _playlistCreateMode = false;
         }
         else
         {
             CreatePlaylistGrid.Visibility = Visibility.Visible;
             FoldersAccessGrid.Visibility = Visibility.Collapsed;
+            SecondMainRow.Height = new GridLength(6, GridUnitType.Star);
+            _playlistCreateMode = true;
         }
-        _isAddPlaylist = !_isAddPlaylist;
-        return;
     }
 
     private void PlaylistEditButton_Click(object sender, RoutedEventArgs e)
@@ -663,21 +659,20 @@ public partial class MainWindow
 
     private void CreatePlaylistButton_Click(object sender, RoutedEventArgs e)
     {
-        string playlistName = PlaylistNameTextBlock.Text;
-
+        var playlistName = PlaylistNameTextBlock.Text;
         if (string.IsNullOrEmpty(playlistName))
         {
             MessageBox.Show("Введите название плейлиста", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        if (PlaylistCreatTrackPath == null || PlaylistCreatTrackPath.Count == 0)
+        if (_newPlaylistTrackCache.Count == 0)
         {
             MessageBox.Show("Добавьте хотя бы один трек в плейлист", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        bool success = _playlistService.AddPlaylist(playlistName, PlaylistCreatTrackPath);
+        var success = _playlistService.AddPlaylist(playlistName, _newPlaylistTrackCache.Select(file => file.FilePath).ToList());
         if (!success)
         {
             MessageBox.Show("Плейлист с таким именем уже существует", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -685,12 +680,11 @@ public partial class MainWindow
         }
 
         PlaylistNameTextBlock.Text = "";
-        PlaylistTrackCreate.Items.Clear();
-        PlaylistCreatTrackPath = null;
+        _newPlaylistTrackCache.Clear();
 
         CreatePlaylistGrid.Visibility = Visibility.Collapsed;
         FoldersAccessGrid.Visibility = Visibility.Visible;
-        _isAddPlaylist = false;
+        _playlistCreateMode = false;
 
         MessageBox.Show("Плейлист успешно создан!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
     }

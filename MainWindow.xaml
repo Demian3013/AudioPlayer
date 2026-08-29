@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:AudioPlayer"
         mc:Ignorable="d"
         Title="MainWindow" Height="600" Width="1000"
+        WindowStartupLocation="CenterScreen"
         Background="{StaticResource MainBg}">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -15,7 +16,7 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition/>
+            <RowDefinition x:Name="SecondMainRow"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
         
@@ -255,8 +256,8 @@
         </Border>
 
         <Border
-            Grid.Row="1" 
-            Grid.Column="0" 
+            Grid.Row="1"
+            Grid.Column="0"
             Style="{StaticResource GlassPanelStyle}">
             <Grid>
                 <Grid x:Name="FoldersAccessGrid">
@@ -286,8 +287,14 @@
                             Width="160"/>
                     </StackPanel>
                     <ListBox
-                        x:Name="PlaylistTrackCreate"
-                        Grid.Row="1"/>
+                        x:Name="NewPlaylistTracksListBox"
+                        Grid.Row="1">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Title}" FontSize="10" Height="12.5"/>
+                            </DataTemplate>    
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                     <Button
                         Grid.Row="2"
                         Style="{StaticResource GlassButtonStyle}"
@@ -425,8 +432,7 @@
             ResizeDirection="Rows"/>
         
         <GridSplitter 
-            Grid.Column="0" 
-            Grid.ColumnSpan="3" 
+            Grid.Column="0"
             Grid.Row="1"
             Height="7" Background="Transparent"
             HorizontalAlignment="Stretch" 
