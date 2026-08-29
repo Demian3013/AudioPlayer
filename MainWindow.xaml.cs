@@ -16,6 +16,7 @@ using AudioPlayer.Tools;
 using TagLib;
 using Path = System.IO.Path;
 using WpfAnimatedGif;
+using AudioPlayer.Data;
 
 namespace AudioPlayer;
 
@@ -662,6 +663,35 @@ public partial class MainWindow
 
     private void CreatePlaylistButton_Click(object sender, RoutedEventArgs e)
     {
+        string playlistName = PlaylistNameTextBlock.Text;
 
+        if (string.IsNullOrEmpty(playlistName))
+        {
+            MessageBox.Show("Введите название плейлиста", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (PlaylistCreatTrackPath == null || PlaylistCreatTrackPath.Count == 0)
+        {
+            MessageBox.Show("Добавьте хотя бы один трек в плейлист", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        bool success = _playlistService.AddPlaylist(playlistName, PlaylistCreatTrackPath);
+        if (!success)
+        {
+            MessageBox.Show("Плейлист с таким именем уже существует", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        PlaylistNameTextBlock.Text = "";
+        PlaylistTrackCreate.Items.Clear();
+        PlaylistCreatTrackPath = null;
+
+        CreatePlaylistGrid.Visibility = Visibility.Collapsed;
+        FoldersAccessGrid.Visibility = Visibility.Visible;
+        _isAddPlaylist = false;
+
+        MessageBox.Show("Плейлист успешно создан!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }
