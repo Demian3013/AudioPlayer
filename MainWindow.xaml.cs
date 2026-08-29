@@ -39,10 +39,12 @@ public partial class MainWindow
     
     private bool _isTrackPlaying;
     private bool _isDragging;
+    private bool _isAddPlaylist;
     private double _trackSpeed = 1;
     private TimeSpan _totalDuration;
     private AudioFileInfo? _currentTrack;
     private PlaybackMode _currentMode;
+    private List<string>? PlaylistCreatTrackPath;
 
     private readonly MediaPlayer _player = new();
     private readonly DispatcherTimer? _trackProgressTimer;
@@ -256,7 +258,19 @@ public partial class MainWindow
 
         if (TrackDataGrid.SelectedItem is not AudioFileInfo selectedTrackInfo) return;
 
-        SetCurrentTrack(selectedTrackInfo);
+        if (!_isAddPlaylist)
+        {
+            SetCurrentTrack(selectedTrackInfo);
+            return;
+        }
+
+        if(PlaylistCreatTrackPath == null)
+        {
+            PlaylistCreatTrackPath = new List<string>();
+        }
+
+        PlaylistCreatTrackPath.Add(selectedTrackInfo.FilePath);
+        PlaylistTrackCreate.Items.Add(selectedTrackInfo.Title);
     }
 
     private void SetCurrentTrack(AudioFileInfo trackInfo)
@@ -624,7 +638,18 @@ public partial class MainWindow
 
     private void PlaylistAddButton_Click(object sender, RoutedEventArgs e)
     {
-        
+        if (_isAddPlaylist)
+        {
+            CreatePlaylistGrid.Visibility = Visibility.Collapsed;
+            FoldersAccessGrid.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            CreatePlaylistGrid.Visibility = Visibility.Visible;
+            FoldersAccessGrid.Visibility = Visibility.Collapsed;
+        }
+        _isAddPlaylist = !_isAddPlaylist;
+        return;
     }
 
     private void PlaylistEditButton_Click(object sender, RoutedEventArgs e)
@@ -633,5 +658,10 @@ public partial class MainWindow
 
     private void PlaylistRemoveButton_Click(object sender, RoutedEventArgs e)
     {
+    }
+
+    private void CreatePlaylistButton_Click(object sender, RoutedEventArgs e)
+    {
+
     }
 }
