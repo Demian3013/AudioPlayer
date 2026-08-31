@@ -357,8 +357,10 @@
                     </Button>
                 </StackPanel>
                 <ListBox
-                    Grid.Row="1">
-                </ListBox>
+                    x:Name="PlaylistListBox"
+                    Grid.Row="1"
+                    ItemsSource="{Binding Playlists}"
+                    DisplayMemberPath="Name" />
             </Grid>
         </Border>
 

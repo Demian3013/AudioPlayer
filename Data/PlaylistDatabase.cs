@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace AudioPlayer.Data;
 
 public class PlaylistDatabase
@@ -20,13 +22,11 @@ public class PlaylistDatabase
     
     public bool RemovePlaylist(string name)
     {
-        if (Playlists.All(p => p.Name != name))
-        {
+        var playlist = Playlists.FirstOrDefault(p => p.Name == name);
+        if (playlist == null)
             return false;
-        }
 
-        var pIndex = Playlists.FindIndex(p => p.Name == name);
-        Playlists.RemoveAt(pIndex);
+        Playlists.Remove(playlist);
         return true;
     }
     
@@ -41,5 +41,5 @@ public class PlaylistDatabase
         return true;
     }
     
-    public List<Playlist> Playlists { get; init; } = [];
+    public ObservableCollection<Playlist> Playlists { get; init; } = [];
 }

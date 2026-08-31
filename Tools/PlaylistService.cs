@@ -1,13 +1,14 @@
+using AudioPlayer.Data;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
-using AudioPlayer.Data;
 
 namespace AudioPlayer.Tools;
 
 public class PlaylistService
 {
     private readonly string _filePath;
-    private PlaylistDatabase _database = new();
+    public PlaylistDatabase _database = new();
     private readonly JsonSerializerOptions _serializeOptions = new() { WriteIndented = true };
 
     public PlaylistService()
@@ -19,6 +20,13 @@ public class PlaylistService
         Directory.CreateDirectory(appFolder);
 
         _filePath = Path.Combine(appFolder, "playlists.json");
+
+        _database.Playlists.CollectionChanged += _PlaylistsCollectionChanged; 
+    }
+
+    private async void _PlaylistsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        await SaveAsync();     
     }
 
     public bool AddPlaylist(string name, List<string> tracks)
@@ -45,7 +53,14 @@ public class PlaylistService
         }
 
         var json = await File.ReadAllTextAsync(_filePath);
-        _database = JsonSerializer.Deserialize<PlaylistDatabase>(json) ?? new PlaylistDatabase();
+        var loaded = JsonSerializer.Deserialize<PlaylistDatabase>(json) ?? new PlaylistDatabase();
+
+        if (loaded != null)
+        {
+            _database.Playlists.Clear();
+            foreach (var playlist in loaded.Playlists)
+                _database.Playlists.Add(playlist);
+        }
     }
 
     public async Task SaveAsync()

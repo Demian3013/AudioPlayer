@@ -1,4 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using AudioPlayer.Data;
+using AudioPlayer.Structs;
+using AudioPlayer.Tools;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -11,8 +14,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using AudioPlayer.Structs;
-using AudioPlayer.Tools;
 using TagLib;
 using WpfAnimatedGif;
 
@@ -29,6 +30,7 @@ public partial class MainWindow
     }
 
     public ObservableCollection<AudioFileInfo> AudioFiles { get; } = [];
+    public ObservableCollection<Playlist> Playlists => _playlistService._database.Playlists;
 
     private const string TrackPlaceholderImgPath = "Image/track_placeholder.png";
     private const string TrackStopImgPath = "Image/stop.png";
@@ -84,7 +86,7 @@ public partial class MainWindow
         var bitmap = new BitmapImage(gifUri);
         ImageBehavior.SetAnimatedSource(LoadingGif, bitmap);
         
-        NewPlaylistTracksListBox.ItemsSource = _newPlaylistTrackCache;
+        NewPlaylistTracksListBox.ItemsSource = _newPlaylistTrackCache;    
     }
 
     protected override async void OnInitialized(EventArgs e)
@@ -684,6 +686,7 @@ public partial class MainWindow
 
         CreatePlaylistGrid.Visibility = Visibility.Collapsed;
         FoldersAccessGrid.Visibility = Visibility.Visible;
+        SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
         _playlistCreateMode = false;
 
         MessageBox.Show("Плейлист успешно создан!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
