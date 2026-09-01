@@ -1,5 +1,4 @@
 using AudioPlayer.Data;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
 
@@ -7,11 +6,22 @@ namespace AudioPlayer.Tools;
 
 public class PlaylistService
 {
-    private readonly string _filePath;
-    public PlaylistDatabase _database = new();
-    private readonly JsonSerializerOptions _serializeOptions = new() { WriteIndented = true };
+    #region Singletone
 
-    public PlaylistService()
+    private static PlaylistService? _instance;
+    public static PlaylistService GetInstance()
+    {
+        return _instance ??= _instance = new PlaylistService();
+    }
+
+    #endregion
+    
+    public PlaylistDatabase Database { get; set; } = new();
+    
+    private readonly string _filePath;
+    private readonly JsonSerializerOptions _serializeOptions = new() { WriteIndented = true };
+    
+    private PlaylistService()
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
@@ -21,7 +31,7 @@ public class PlaylistService
 
         _filePath = Path.Combine(appFolder, "playlists.json");
 
-        _database.Playlists.CollectionChanged += _PlaylistsCollectionChanged; 
+        Database.Playlists.CollectionChanged += _PlaylistsCollectionChanged; 
     }
 
     private async void _PlaylistsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -29,26 +39,26 @@ public class PlaylistService
         await SaveAsync();     
     }
 
-    public bool AddPlaylist(string name, List<string> tracks)
+    public AddPlaylistResult AddPlaylist(string name, List<string> tracks)
     {
-        return _database.AddPlaylist(name, tracks);
+        return Database.AddPlaylist(name, tracks);
     }
     
     public bool RemovePlaylist(string name)
     {
-        return _database.RemovePlaylist(name);
+        return Database.RemovePlaylist(name);
     }
     
     public bool RemovePlaylist(int index)
     {
-        return _database.RemovePlaylist(index);
+        return Database.RemovePlaylist(index);
     }
     
     public async Task LoadAsync()
     {
         if (!File.Exists(_filePath))
         {
-            _database = new PlaylistDatabase();
+            Database = new PlaylistDatabase();
             return;
         }
 
@@ -57,15 +67,15 @@ public class PlaylistService
 
         if (loaded != null)
         {
-            _database.Playlists.Clear();
+            Database.Playlists.Clear();
             foreach (var playlist in loaded.Playlists)
-                _database.Playlists.Add(playlist);
+                Database.Playlists.Add(playlist);
         }
     }
 
     public async Task SaveAsync()
     {
-        var json = JsonSerializer.Serialize(_database, _serializeOptions);
+        var json = JsonSerializer.Serialize(Database, _serializeOptions);
         await File.WriteAllTextAsync(_filePath, json);
     }
 }

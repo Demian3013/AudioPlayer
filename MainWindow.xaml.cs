@@ -15,7 +15,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using TagLib;
-using TagLib.Mpeg;
 using WpfAnimatedGif;
 
 namespace AudioPlayer;
@@ -31,7 +30,7 @@ public partial class MainWindow
     }
 
     public ObservableCollection<AudioFileInfo> AudioFiles { get; } = [];
-    public ObservableCollection<Playlist> Playlists => _playlistService._database.Playlists;
+    public ObservableCollection<Playlist> Playlists => _playlistService.Database.Playlists;
 
     private const string TrackPlaceholderImgPath = "Image/track_placeholder.png";
     private const string TrackStopImgPath = "Image/stop.png";
@@ -47,11 +46,11 @@ public partial class MainWindow
     private TimeSpan _totalDuration;
     private AudioFileInfo? _currentTrack;
     private PlaybackMode _currentMode;
-    private ObservableCollection<AudioFileInfo> _newPlaylistTrackCache = [];
+    private readonly ObservableCollection<AudioFileInfo> _newPlaylistTrackCache = [];
 
     private readonly MediaPlayer _player = new();
     private readonly DispatcherTimer? _trackProgressTimer;
-    private readonly PlaylistService _playlistService = new();
+    private readonly PlaylistService _playlistService = PlaylistService.GetInstance();
 
     private readonly BitmapImage _stopTrackBitmapImage = new(new Uri(TrackStopImgPath, UriKind.Relative));
     private readonly BitmapImage _playTrackBitmapImage = new(new Uri(TrackPlayImgPath, UriKind.Relative));
@@ -73,7 +72,6 @@ public partial class MainWindow
 
         FolderTreeManager.BuildTree(FoldersTreeView);
         DataContext = this;
-        Loaded += AfterInitialize;
         
         _trackProgressTimer = new DispatcherTimer
         {
@@ -81,14 +79,12 @@ public partial class MainWindow
         };
 
         _player.Volume = VolumeSlider.Value;
-
         _currentMode = GetSliderPlaybackMode();
 
-        var gifUri = new Uri("loading.gif", UriKind.Relative);
-        var bitmap = new BitmapImage(gifUri);
+        var bitmap = new BitmapImage(new Uri("loading.gif", UriKind.Relative));
         ImageBehavior.SetAnimatedSource(LoadingGif, bitmap);
         
-        NewPlaylistTracksListBox.ItemsSource = _newPlaylistTrackCache;    
+        NewPlaylistTracksListBox.ItemsSource = _newPlaylistTrackCache;
     }
 
     protected override async void OnInitialized(EventArgs e)
@@ -109,8 +105,8 @@ public partial class MainWindow
 
         return (PlaybackMode)TrackEndModeSlider.Value;
     }
-
-    private void AfterInitialize(object sender, RoutedEventArgs e)
+    
+    private void ThumbInit(object sender, RoutedEventArgs e)
     {
         ProgressSlider.ApplyTemplate();
 
@@ -122,10 +118,6 @@ public partial class MainWindow
 
         thumb.DragStarted += Thumb_DragStarted;
         thumb.DragCompleted += Thumb_DragCompleted;
-
-        BitmapImage image = new BitmapImage(new Uri("Image/remove.png", UriKind.Relative));
-
-        DeleteButtonImage.Source = image;
     }
 
     private CancellationTokenSource? _cancellationTokenSource;
@@ -213,7 +205,7 @@ public partial class MainWindow
     }
 
     private static List<AudioFileInfo> ReadAudioMetadata(
-        IReadOnlyList<string> files,
+        List<string> files,
         CancellationToken cancellationToken)
     {
         var result = new List<AudioFileInfo>(files.Count);
@@ -463,7 +455,6 @@ public partial class MainWindow
     private void RewindButton_Click(object sender, RoutedEventArgs e)
     {
         if (!_player.HasAudio) return;
-
         PlayPreviousTrack();
     }
 
@@ -659,96 +650,94 @@ public partial class MainWindow
 
     private void PlaylistEditButton_Click(object sender, RoutedEventArgs e)
     {
-        if (PlaylistListBox.SelectedItem is not Playlist playlist) return;
-
         if (_playlistEditMode)
         {
             CreatePlaylistGrid.Visibility = Visibility.Collapsed;
             FoldersAccessGrid.Visibility = Visibility.Visible;
             SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
             _playlistEditMode = false;
+            return;
         }
-        else
+        
+        if (PlaylistListBox.SelectedItem is not Playlist playlist) return;
+
+        CreatePlaylistGrid.Visibility = Visibility.Visible;
+        FoldersAccessGrid.Visibility = Visibility.Collapsed;
+        PlaylistNameTextBlock.Text = playlist.Name;
+
+        var tracks = new List<AudioFileInfo>(playlist.Tracks.Count);
+
+        for (var index = 0; index < playlist.Tracks.Count; index++)
         {
-            CreatePlaylistGrid.Visibility = Visibility.Visible;
-            FoldersAccessGrid.Visibility = Visibility.Collapsed;
-            PlaylistNameTextBlock.Text = playlist.Name;
+            var filePath = playlist.Tracks[index];
 
-            var tracks = new List<AudioFileInfo>(playlist.Tracks.Count);
-
-            for (var index = 0; index < playlist.Tracks.Count; index++)
+            try
             {
-                var filePath = playlist.Tracks[index];
+                using var tagFile = TagLib.File.Create(filePath);
 
-                try
-                {
-                    using var tagFile = TagLib.File.Create(filePath);
+                var title = tagFile.Tag.Title;
+                var artist = tagFile.Tag.FirstPerformer;
+                var album = tagFile.Tag.Album;
+                var duration = tagFile.Properties.Duration;
 
-                    var title = tagFile.Tag.Title;
-                    var artist = tagFile.Tag.FirstPerformer;
-                    var album = tagFile.Tag.Album;
-                    var duration = tagFile.Properties.Duration;
-
-                    tracks.Add(new AudioFileInfo(index, filePath, title, artist, album, duration));
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    Debug.WriteLine(
-                        $"Нет доступа к файлу {filePath}: {ex.Message}");
-                }
-                catch (ArgumentOutOfRangeException ex)
-                {
-                    Debug.WriteLine(
-                        $"Ошибка чтения файла {filePath}: {ex.Message}");
-                }
-                catch (CorruptFileException ex)
-                {
-                    Debug.WriteLine(
-                        $"Повреждённый файл {filePath}: {ex.Message}");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(
-                        $"Ошибка обработки {filePath}: {ex.Message}");
-                }
+                tracks.Add(new AudioFileInfo(index, filePath, title, artist, album, duration));
             }
-
-            _newPlaylistTrackCache.Clear();
-
-            foreach (var audioFile in tracks)
+            catch (UnauthorizedAccessException ex)
             {
-                _newPlaylistTrackCache.Add(audioFile);
+                Debug.WriteLine(
+                    $"Нет доступа к файлу {filePath}: {ex.Message}");
             }
-
-            CreatePlaylistButton.Content = "Изменить плэйлист";
-            SecondMainRow.Height = new GridLength(6, GridUnitType.Star);
-            _playlistEditMode = true;
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Debug.WriteLine(
+                    $"Ошибка чтения файла {filePath}: {ex.Message}");
+            }
+            catch (CorruptFileException ex)
+            {
+                Debug.WriteLine(
+                    $"Повреждённый файл {filePath}: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    $"Ошибка обработки {filePath}: {ex.Message}");
+            }
         }
+
+        _newPlaylistTrackCache.Clear();
+
+        foreach (var audioFile in tracks)
+        {
+            _newPlaylistTrackCache.Add(audioFile);
+        }
+
+        CreatePlaylistButton.Content = "Изменить плейлист";
+        SecondMainRow.Height = new GridLength(6, GridUnitType.Star);
+        _playlistEditMode = true;
     }
 
     private void PlaylistRemoveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (!_playlistCreateMode) {
-            if (!(PlaylistListBox.SelectedItem is not Playlist playlist))
-            { 
-                MessageBoxResult result = MessageBox.Show($"Вы действительно хотите удалить {playlist.Name}?",
-                                        "Подтверждение удаления", MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-                if (result == MessageBoxResult.Yes)
-                {
-                    _playlistService.RemovePlaylist(playlist.Name);
-                }
-
-                return;
-            }
+        if (_playlistCreateMode)
+        {
+            _newPlaylistTrackCache.Clear();
+            PlaylistNameTextBlock.Text = string.Empty;
+            CreatePlaylistGrid.Visibility = Visibility.Collapsed;
+            FoldersAccessGrid.Visibility = Visibility.Visible;
+            SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
+            _playlistCreateMode = false;
+            return;
         }
 
-        PlaylistNameTextBlock.Text = "";
-        _newPlaylistTrackCache.Clear();
-        CreatePlaylistGrid.Visibility = Visibility.Collapsed;
-        FoldersAccessGrid.Visibility = Visibility.Visible;
-        SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
-        _playlistCreateMode = false;
+        if (PlaylistListBox.SelectedItem is not Playlist playlist) return;
+        
+        var result = MessageBox.Show($"Вы действительно хотите удалить {playlist.Name}?",
+            "Подтверждение удаления", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Yes)
+        {
+            _playlistService.RemovePlaylist(playlist.Name);
+        }
     }
 
     private void CreatePlaylistButton_Click(object sender, RoutedEventArgs e)
@@ -756,21 +745,32 @@ public partial class MainWindow
         var playlistName = PlaylistNameTextBlock.Text;
         if (string.IsNullOrEmpty(playlistName))
         {
-            MessageBox.Show("Введите название плейлиста", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("Введите название плейлиста", "Ошибка",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        if (_newPlaylistTrackCache.Count == 0)
+        var success = _playlistService.AddPlaylist(playlistName, 
+                    _newPlaylistTrackCache.Select(file => file.FilePath).ToList());
+        
+        switch (success)
         {
-            MessageBox.Show("Добавьте хотя бы один трек в плейлист", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        var success = _playlistService.AddPlaylist(playlistName, _newPlaylistTrackCache.Select(file => file.FilePath).ToList());
-        if (!success)
-        {
-            MessageBox.Show("Плейлист с таким именем уже существует", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
+            case AddPlaylistResult.Success:
+                break;
+            case AddPlaylistResult.ZeroTracksError:
+            {
+                MessageBox.Show("Добавьте хотя бы один трек в плейлист", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            case AddPlaylistResult.NameDuplicateError:
+            {
+                MessageBox.Show("Плейлист с таким именем уже существует", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
         PlaylistNameTextBlock.Text = "";
@@ -781,7 +781,8 @@ public partial class MainWindow
         SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
         _playlistCreateMode = false;
 
-        MessageBox.Show("Плейлист успешно создан!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show("Плейлист успешно создан!", "Успех",
+            MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void PlaylistListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)

@@ -3,11 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:media="clr-namespace:System.Windows.Media;assembly=PresentationCore"
         xmlns:local="clr-namespace:AudioPlayer"
         mc:Ignorable="d"
         Title="MainWindow" Height="600" Width="1000"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource MainBg}">
+        Background="{StaticResource MainBg}"
+        media:RenderOptions.BitmapScalingMode="HighQuality"
+        Loaded="ThumbInit"
+        >
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
@@ -354,6 +358,7 @@
                     Cursor="Hand">
                         <Image 
                             x:Name="DeleteButtonImage"
+                            Source="Image/remove.png"
                             Width="28" Height="28"
                             Visibility="Visible"/>
                     </Button>

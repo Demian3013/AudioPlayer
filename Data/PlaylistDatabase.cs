@@ -2,22 +2,29 @@ using System.Collections.ObjectModel;
 
 namespace AudioPlayer.Data;
 
+public enum AddPlaylistResult
+{
+    Success,
+    ZeroTracksError,
+    NameDuplicateError
+}
+
 public class PlaylistDatabase
 {
-    public bool AddPlaylist(string name, List<string> tracks)
+    public AddPlaylistResult AddPlaylist(string name, List<string> tracks)
     {
         if (tracks.Count == 0)
         {
-            return false;
+            return AddPlaylistResult.ZeroTracksError;
         }
         
         if (Playlists.Any(p => p.Name == name))
         {
-            return false;
+            return AddPlaylistResult.NameDuplicateError;
         }
 
         Playlists.Add(new Playlist(name, tracks));
-        return true;
+        return AddPlaylistResult.Success;
     }
     
     public bool RemovePlaylist(string name)
