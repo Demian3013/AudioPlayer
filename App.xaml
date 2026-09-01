@@ -362,48 +362,6 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style TargetType="ScrollBar">
-            <Setter Property="Width" Value="14"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollBar">
-                        <Border Background="Transparent"
-                        BorderBrush="Transparent"
-                        BorderThickness="0">
-                            <Track x:Name="PART_Track"
-                           IsDirectionReversed="True"
-                           Orientation="Vertical"
-                           ViewportSize="{TemplateBinding ViewportSize}">
-                                <Track.Thumb>
-                                    <Thumb Cursor="Hand">
-                                        <Thumb.Template>
-                                            <ControlTemplate TargetType="Thumb">
-                                                <Border Background="#B0C4DE"
-                                                CornerRadius="7"
-                                                Margin="2,0"/>
-                                            </ControlTemplate>
-                                        </Thumb.Template>
-                                    </Thumb>
-                                </Track.Thumb>
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageUpCommand"
-                                          Background="Transparent"
-                                          BorderBrush="Transparent"
-                                          BorderThickness="0"/>
-                                </Track.DecreaseRepeatButton>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageDownCommand"
-                                          Background="Transparent"
-                                          BorderBrush="Transparent"
-                                          BorderThickness="0"/>
-                                </Track.IncreaseRepeatButton>
-                            </Track>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <!-- Стиль для TextBox -->
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="{StaticResource GlassBg}"/>
             <Setter Property="BorderBrush" Value="{StaticResource GlassBorder}"/>
@@ -488,6 +446,57 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+        <Style TargetType="ScrollBar">
+            <Setter Property="MinWidth" Value="14"/>
+            <Setter Property="MinHeight" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ScrollBar">
+                        <Border Background="Transparent"
+                        BorderBrush="Transparent"
+                        BorderThickness="0">
+                            <Track x:Name="PART_Track"
+                           Orientation="{TemplateBinding Orientation}"
+                           ViewportSize="{TemplateBinding ViewportSize}">
+                                <Track.Thumb>
+                                    <Thumb Cursor="Hand">
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Border Background="#B0C4DE"
+                                                CornerRadius="7"
+                                                Margin="2,0"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageUpCommand"
+                                          Background="Transparent"
+                                          BorderBrush="Transparent"
+                                          BorderThickness="0"/>
+                                </Track.DecreaseRepeatButton>
+                                <Track.IncreaseRepeatButton>
+                                    <RepeatButton Command="ScrollBar.PageDownCommand"
+                                          Background="Transparent"
+                                          BorderBrush="Transparent"
+                                          BorderThickness="0"/>
+                                </Track.IncreaseRepeatButton>
+                            </Track>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Orientation" Value="Vertical">
+                    <Setter Property="Width" Value="14"/>
+                    <Setter Property="Height" Value="Auto"/>
+                </Trigger>
+                <Trigger Property="Orientation" Value="Horizontal">
+                    <Setter Property="Height" Value="14"/>
+                    <Setter Property="Width" Value="Auto"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </Application.Resources>
  </Application>

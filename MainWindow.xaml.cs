@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using TagLib;
+using TagLib.Mpeg;
 using WpfAnimatedGif;
 
 namespace AudioPlayer;
@@ -41,6 +42,7 @@ public partial class MainWindow
     private bool _isTrackPlaying;
     private bool _isDragging;
     private bool _playlistCreateMode;
+    private bool _playlistEditMode;
     private double _trackSpeed = 1;
     private TimeSpan _totalDuration;
     private AudioFileInfo? _currentTrack;
@@ -71,7 +73,7 @@ public partial class MainWindow
 
         FolderTreeManager.BuildTree(FoldersTreeView);
         DataContext = this;
-        Loaded += InitializeSliderThumb;
+        Loaded += AfterInitialize;
         
         _trackProgressTimer = new DispatcherTimer
         {
@@ -108,7 +110,7 @@ public partial class MainWindow
         return (PlaybackMode)TrackEndModeSlider.Value;
     }
 
-    private void InitializeSliderThumb(object sender, RoutedEventArgs e)
+    private void AfterInitialize(object sender, RoutedEventArgs e)
     {
         ProgressSlider.ApplyTemplate();
 
@@ -120,6 +122,10 @@ public partial class MainWindow
 
         thumb.DragStarted += Thumb_DragStarted;
         thumb.DragCompleted += Thumb_DragCompleted;
+
+        BitmapImage image = new BitmapImage(new Uri("Image/remove.png", UriKind.Relative));
+
+        DeleteButtonImage.Source = image;
     }
 
     private CancellationTokenSource? _cancellationTokenSource;
@@ -653,10 +659,96 @@ public partial class MainWindow
 
     private void PlaylistEditButton_Click(object sender, RoutedEventArgs e)
     {
+        if (PlaylistListBox.SelectedItem is not Playlist playlist) return;
+
+        if (_playlistEditMode)
+        {
+            CreatePlaylistGrid.Visibility = Visibility.Collapsed;
+            FoldersAccessGrid.Visibility = Visibility.Visible;
+            SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
+            _playlistEditMode = false;
+        }
+        else
+        {
+            CreatePlaylistGrid.Visibility = Visibility.Visible;
+            FoldersAccessGrid.Visibility = Visibility.Collapsed;
+            PlaylistNameTextBlock.Text = playlist.Name;
+
+            var tracks = new List<AudioFileInfo>(playlist.Tracks.Count);
+
+            for (var index = 0; index < playlist.Tracks.Count; index++)
+            {
+                var filePath = playlist.Tracks[index];
+
+                try
+                {
+                    using var tagFile = TagLib.File.Create(filePath);
+
+                    var title = tagFile.Tag.Title;
+                    var artist = tagFile.Tag.FirstPerformer;
+                    var album = tagFile.Tag.Album;
+                    var duration = tagFile.Properties.Duration;
+
+                    tracks.Add(new AudioFileInfo(index, filePath, title, artist, album, duration));
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    Debug.WriteLine(
+                        $"Нет доступа к файлу {filePath}: {ex.Message}");
+                }
+                catch (ArgumentOutOfRangeException ex)
+                {
+                    Debug.WriteLine(
+                        $"Ошибка чтения файла {filePath}: {ex.Message}");
+                }
+                catch (CorruptFileException ex)
+                {
+                    Debug.WriteLine(
+                        $"Повреждённый файл {filePath}: {ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(
+                        $"Ошибка обработки {filePath}: {ex.Message}");
+                }
+            }
+
+            _newPlaylistTrackCache.Clear();
+
+            foreach (var audioFile in tracks)
+            {
+                _newPlaylistTrackCache.Add(audioFile);
+            }
+
+            CreatePlaylistButton.Content = "Изменить плэйлист";
+            SecondMainRow.Height = new GridLength(6, GridUnitType.Star);
+            _playlistEditMode = true;
+        }
     }
 
     private void PlaylistRemoveButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!_playlistCreateMode) {
+            if (!(PlaylistListBox.SelectedItem is not Playlist playlist))
+            { 
+                MessageBoxResult result = MessageBox.Show($"Вы действительно хотите удалить {playlist.Name}?",
+                                        "Подтверждение удаления", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    _playlistService.RemovePlaylist(playlist.Name);
+                }
+
+                return;
+            }
+        }
+
+        PlaylistNameTextBlock.Text = "";
+        _newPlaylistTrackCache.Clear();
+        CreatePlaylistGrid.Visibility = Visibility.Collapsed;
+        FoldersAccessGrid.Visibility = Visibility.Visible;
+        SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
+        _playlistCreateMode = false;
     }
 
     private void CreatePlaylistButton_Click(object sender, RoutedEventArgs e)
@@ -690,5 +782,61 @@ public partial class MainWindow
         _playlistCreateMode = false;
 
         MessageBox.Show("Плейлист успешно создан!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private void PlaylistListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (PlaylistListBox.SelectedItem is not Playlist playlist) return;
+
+        var tracks = new List<AudioFileInfo>(playlist.Tracks.Count);
+
+        for (var index = 0; index < playlist.Tracks.Count; index++)
+        {
+            var filePath = playlist.Tracks[index];
+
+            try
+            {
+                using var tagFile = TagLib.File.Create(filePath);
+
+                var title = tagFile.Tag.Title;
+                var artist = tagFile.Tag.FirstPerformer;
+                var album = tagFile.Tag.Album;
+                var duration = tagFile.Properties.Duration;
+
+                tracks.Add(new AudioFileInfo(index, filePath, title, artist, album, duration));
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Debug.WriteLine(
+                    $"Нет доступа к файлу {filePath}: {ex.Message}");
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Debug.WriteLine(
+                    $"Ошибка чтения файла {filePath}: {ex.Message}");
+            }
+            catch (CorruptFileException ex)
+            {
+                Debug.WriteLine(
+                    $"Повреждённый файл {filePath}: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(
+                    $"Ошибка обработки {filePath}: {ex.Message}");
+            }
+        }
+
+        AudioFiles.Clear();
+
+        foreach (var audioFile in tracks)
+        {
+            AudioFiles.Add(audioFile);
+        }
+    }
+
+    private void NewPlaylistTracksListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (PlaylistListBox.SelectedItem is not AudioFileInfo selectedFile) return;
     }
 }

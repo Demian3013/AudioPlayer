@@ -288,7 +288,8 @@
                     </StackPanel>
                     <ListBox
                         x:Name="NewPlaylistTracksListBox"
-                        Grid.Row="1">
+                        Grid.Row="1"
+                        SelectionChanged="NewPlaylistTracksListBox_SelectionChanged">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Title}" FontSize="10" Height="12.5"/>
@@ -352,15 +353,17 @@
                     BorderThickness="0"
                     Cursor="Hand">
                         <Image 
-                            Source="/Image/remove.png"
-                            Width="28" Height="28"/>
+                            x:Name="DeleteButtonImage"
+                            Width="28" Height="28"
+                            Visibility="Visible"/>
                     </Button>
                 </StackPanel>
                 <ListBox
                     x:Name="PlaylistListBox"
                     Grid.Row="1"
                     ItemsSource="{Binding Playlists}"
-                    DisplayMemberPath="Name" />
+                    DisplayMemberPath="Name"
+                    SelectionChanged="PlaylistListBox_SelectionChanged"/>
             </Grid>
         </Border>
 
