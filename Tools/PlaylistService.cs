@@ -44,6 +44,11 @@ public class PlaylistService
         return Database.AddPlaylist(name, tracks);
     }
     
+    public bool RemovePlaylist(Playlist playlist)
+    {
+        return Database.RemovePlaylist(playlist);
+    }
+    
     public bool RemovePlaylist(string name)
     {
         return Database.RemovePlaylist(name);

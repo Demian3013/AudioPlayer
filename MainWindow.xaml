@@ -21,7 +21,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition x:Name="SecondMainRow"/>
-            <RowDefinition/>
+            <RowDefinition x:Name="ThirdMainRow"/>
         </Grid.RowDefinitions>
         
         <Border
@@ -425,6 +425,7 @@
         <GridSplitter 
             Grid.Column="0" 
             Grid.Row="1"
+            Grid.RowSpan="2"
             Width="7" 
             Background="Transparent"
             ResizeBehavior="BasedOnAlignment" 
