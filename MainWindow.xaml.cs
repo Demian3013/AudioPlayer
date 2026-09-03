@@ -46,6 +46,7 @@ public partial class MainWindow
     private TimeSpan _totalDuration;
     private AudioFileInfo? _currentTrack;
     private PlaybackMode _currentMode;
+    private Playlist? _currentPlaylist;
     private readonly ObservableCollection<AudioFileInfo> _newPlaylistTrackCache = [];
 
     private readonly MediaPlayer _player = new();
@@ -85,6 +86,36 @@ public partial class MainWindow
         ImageBehavior.SetAnimatedSource(LoadingGif, bitmap);
         
         NewPlaylistTracksListBox.ItemsSource = _newPlaylistTrackCache;
+
+        NewPlaylistTracksListBox.PreviewKeyDown += (s, e) =>
+        {
+            if (e.Key == Key.Delete && NewPlaylistTracksListBox.SelectedItem is AudioFileInfo selectedTrack)
+            {
+                var result = MessageBox.Show($"Удалить трек \"{selectedTrack.Title}\" из списка?",
+                    "Подтверждение удаления", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    _newPlaylistTrackCache.Remove(selectedTrack);
+                    NewPlaylistTracksListBox.SelectedItem = null;
+                }
+                e.Handled = true;
+            }
+        };
+
+        PlaylistListBox.PreviewKeyDown += (s, e) =>
+        {
+            if (e.Key == Key.Delete && PlaylistListBox.SelectedItem is Playlist selectedPlaylist)
+            {
+                var result = MessageBox.Show($"Вы действительно хотите удалить плейлист \"{selectedPlaylist.Name}\"?",
+                    "Подтверждение удаления", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    _playlistService.RemovePlaylist(selectedPlaylist.Name);
+                    PlaylistListBox.SelectedItem = null;
+                }
+                e.Handled = true;
+            }
+        };
     }
 
     protected override async void OnInitialized(EventArgs e)
@@ -259,13 +290,14 @@ public partial class MainWindow
 
         if (TrackDataGrid.SelectedItem is not AudioFileInfo selectedTrackInfo) return;
 
-        if (!_playlistCreateMode)
+        if (_playlistCreateMode || _playlistEditMode)
         {
-            SetCurrentTrack(selectedTrackInfo);
+            _newPlaylistTrackCache.Add(selectedTrackInfo);
             return;
         }
         
-        _newPlaylistTrackCache.Add(selectedTrackInfo);
+        SetCurrentTrack(selectedTrackInfo);
+
     }
 
     private void SetCurrentTrack(AudioFileInfo trackInfo)
@@ -712,6 +744,7 @@ public partial class MainWindow
         }
 
         CreatePlaylistButton.Content = "Изменить плейлист";
+        _currentPlaylist = playlist;
         SecondMainRow.Height = new GridLength(6, GridUnitType.Star);
         _playlistEditMode = true;
     }
@@ -742,7 +775,7 @@ public partial class MainWindow
 
     private void CreatePlaylistButton_Click(object sender, RoutedEventArgs e)
     {
-        var playlistName = PlaylistNameTextBlock.Text;
+        var playlistName = PlaylistNameTextBlock.Text.Trim();
         if (string.IsNullOrEmpty(playlistName))
         {
             MessageBox.Show("Введите название плейлиста", "Ошибка",
@@ -750,25 +783,46 @@ public partial class MainWindow
             return;
         }
 
-        var success = _playlistService.AddPlaylist(playlistName, 
-                    _newPlaylistTrackCache.Select(file => file.FilePath).ToList());
-        
-        switch (success)
+        var trackPaths = _newPlaylistTrackCache.Select(file => file.FilePath).ToList();
+        if (trackPaths.Count == 0)
         {
-            case AddPlaylistResult.Success:
-                break;
-            case AddPlaylistResult.ZeroTracksError:
-            {
-                MessageBox.Show("Добавьте хотя бы один трек в плейлист", "Ошибка",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-            case AddPlaylistResult.NameDuplicateError:
+            MessageBox.Show("Добавьте хотя бы один трек в плейлист", "Ошибка",
+                MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        bool wasEditMode = _playlistEditMode;
+
+        if (wasEditMode)
+        {
+            if (_currentPlaylist == null) return;
+
+            if (_currentPlaylist.Name != playlistName &&
+                _playlistService.Database.Playlists.Any(p => p.Name == playlistName))
             {
                 MessageBox.Show("Плейлист с таким именем уже существует", "Ошибка",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+
+            _playlistService.RemovePlaylist(_currentPlaylist.Name);
+            _currentPlaylist = null;
+        }
+
+        var success = _playlistService.AddPlaylist(playlistName, trackPaths);
+
+        switch (success)
+        {
+            case AddPlaylistResult.Success:
+                break;
+            case AddPlaylistResult.ZeroTracksError:
+                MessageBox.Show("Добавьте хотя бы один трек в плейлист", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            case AddPlaylistResult.NameDuplicateError:
+                MessageBox.Show("Плейлист с таким именем уже существует", "Ошибка",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             default:
                 throw new ArgumentOutOfRangeException();
         }
@@ -780,9 +834,10 @@ public partial class MainWindow
         FoldersAccessGrid.Visibility = Visibility.Visible;
         SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
         _playlistCreateMode = false;
+        _playlistEditMode = false;
 
-        MessageBox.Show("Плейлист успешно создан!", "Успех",
-            MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show(wasEditMode ? "Плейлист успешно изменен!" : "Плейлист успешно создан!",
+            "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     private void PlaylistListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -834,10 +889,5 @@ public partial class MainWindow
         {
             AudioFiles.Add(audioFile);
         }
-    }
-
-    private void NewPlaylistTracksListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (PlaylistListBox.SelectedItem is not AudioFileInfo selectedFile) return;
     }
 }

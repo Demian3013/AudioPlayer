@@ -292,8 +292,7 @@
                     </StackPanel>
                     <ListBox
                         x:Name="NewPlaylistTracksListBox"
-                        Grid.Row="1"
-                        SelectionChanged="NewPlaylistTracksListBox_SelectionChanged">
+                        Grid.Row="1">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding Title}" FontSize="10" Height="12.5"/>
