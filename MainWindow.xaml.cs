@@ -679,23 +679,14 @@ public partial class MainWindow
     {
         if (_playlistCreateMode)
         {
-            CreatePlaylistGrid.Visibility = Visibility.Collapsed;
-            FoldersAccessGrid.Visibility = Visibility.Visible;
-            
-            SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
-            ThirdMainRow.Height  = new GridLength(1, GridUnitType.Star);
-            
-            _playlistCreateMode  = false;
+            CloseCreatePlaylistGrid();
+            _playlistCreateMode = false;            
         }
         else
         {
-            CreatePlaylistGrid.Visibility = Visibility.Visible;
-            FoldersAccessGrid.Visibility = Visibility.Collapsed;
-            
-            SecondMainRow.Height = new GridLength(6, GridUnitType.Star);
-            ThirdMainRow.Height  = new GridLength(1, GridUnitType.Star);
-            
-            _playlistCreateMode  = true;
+            OpenCreatePlaylistGrid();
+            _playlistCreateMode = true;
+            CreatePlaylistButton.Content = "Создать плейлист";
         }
     }
 
@@ -703,12 +694,7 @@ public partial class MainWindow
     {
         if (_playlistEditMode)
         {
-            CreatePlaylistGrid.Visibility = Visibility.Collapsed;
-            FoldersAccessGrid.Visibility = Visibility.Visible;
-            
-            SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
-            ThirdMainRow.Height  = new GridLength(1, GridUnitType.Star);
-            
+            CloseCreatePlaylistGrid();
             _playlistEditMode = false;
             return;
         }
@@ -776,29 +762,54 @@ public partial class MainWindow
 
     private void PlaylistRemoveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_playlistCreateMode)
+        if (_playlistEditMode || _playlistCreateMode)
         {
-            _newPlaylistTrackCache.Clear();
-            PlaylistNameTextBlock.Text = string.Empty;
-            CreatePlaylistGrid.Visibility = Visibility.Collapsed;
-            FoldersAccessGrid.Visibility = Visibility.Visible;
-            
-            SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
-            ThirdMainRow.Height = new GridLength(1, GridUnitType.Star);
-            
-            _playlistCreateMode = false;
+            if (NewPlaylistTracksListBox.SelectedItem is not AudioFileInfo track) return;
+
+            var result = MessageBox.Show($"Вы действительно хотите удалить {track.Title}?",
+                "Подтверждение удаления", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
+            {
+                _newPlaylistTrackCache.Remove(track);
+            }
             return;
         }
-
         if (PlaylistListBox.SelectedItem is not Playlist playlist) return;
-        
-        var result = MessageBox.Show($"Вы действительно хотите удалить {playlist.Name}?",
+
+        var result1 = MessageBox.Show($"Вы действительно хотите удалить {playlist.Name}?",
             "Подтверждение удаления", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
-        if (result == MessageBoxResult.Yes)
+        if (result1 == MessageBoxResult.Yes)
         {
             _playlistService.RemovePlaylist(playlist.Name);
         }
+    }
+
+    private void OpenCreatePlaylistGrid()
+    {
+        CreatePlaylistGrid.Visibility = Visibility.Visible;
+        FoldersAccessGrid.Visibility = Visibility.Collapsed;
+
+        SecondMainRow.Height = new GridLength(6, GridUnitType.Star);
+        ThirdMainRow.Height = new GridLength(1, GridUnitType.Star);
+    }
+
+    private void CloseCreatePlaylistGrid()
+    {
+        var result = MessageBox.Show("Покинуть редактор? Все изменения отменятся",
+                "Подтверждение удаления", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.No) return;
+        
+            _newPlaylistTrackCache.Clear();
+        PlaylistNameTextBlock.Text = string.Empty;
+
+        CreatePlaylistGrid.Visibility = Visibility.Collapsed;
+        FoldersAccessGrid.Visibility = Visibility.Visible;
+
+        SecondMainRow.Height = new GridLength(1, GridUnitType.Star);
+        ThirdMainRow.Height = new GridLength(1, GridUnitType.Star);
     }
 
     private void CreatePlaylistButton_Click(object sender, RoutedEventArgs e)

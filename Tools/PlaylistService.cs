@@ -30,13 +30,6 @@ public class PlaylistService
         Directory.CreateDirectory(appFolder);
 
         _filePath = Path.Combine(appFolder, "playlists.json");
-
-        Database.Playlists.CollectionChanged += _PlaylistsCollectionChanged; 
-    }
-
-    private async void _PlaylistsCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        await SaveAsync();     
     }
 
     public AddPlaylistResult AddPlaylist(string name, List<string> tracks)
